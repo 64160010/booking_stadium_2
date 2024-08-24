@@ -14,6 +14,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\BorrowingController;
 use App\Http\Controllers\StadiumController;
+use App\Http\Controllers\BookingController;
 
 Route::get('/', function () {
     return view('home');
@@ -52,3 +53,6 @@ Route::group(['middleware' => ['auth', 'is_admin']], function() {
     // เส้นทางอื่น ๆ ที่เกี่ยวกับการจัดการสนาม
 });
 Route::get('/stadium', [StadiumController::class, 'show'])->name('stadium.show');
+
+// เส้นทางสำหรับการจอง
+Route::get('/booking', [BookingController::class, 'index'])->name('booking');

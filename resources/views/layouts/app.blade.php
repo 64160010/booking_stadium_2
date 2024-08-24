@@ -16,8 +16,7 @@
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </head>
 <body>
@@ -38,6 +37,11 @@
 
                     <!-- Right Side Of Navbar -->
                     <ul class="navbar-nav ms-auto">
+                        <!-- New Booking Button -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('booking') }}">{{ __('จองสนาม') }}</a>
+                        </li>
+                        
                         @guest
                             @if (Route::has('login'))
                                 <li class="nav-item">
