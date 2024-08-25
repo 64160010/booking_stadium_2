@@ -57,7 +57,8 @@ Route::get('/booking', [BookingController::class, 'index'])->name('booking');
 // เส้นทางสำหรับการยืม
 Route::get('/lending', [LendingController::class, 'index'])->name('lending.index');
 Route::get('/borrow-item/{id}', [LendingController::class, 'borrowItem'])->name('borrow-item');
-Route::get('/edit-item/{id}', [LendingController::class, 'editItem'])->name('edit-item');
+Route::get('/items/{id}/edit', [LendingController::class, 'edit'])->name('edit-item');
+Route::put('/items/{id}', [LendingController::class, 'update'])->name('update-item');
 Route::get('/repair', [LendingController::class, 'repair'])->name('repair');
 Route::get('/add-item', [LendingController::class, 'addItem'])->name('add-item');
 Route::post('/store-item', [LendingController::class, 'storeItem'])->name('store-item');

@@ -52,5 +52,40 @@ class LendingController extends Controller
 
         return redirect()->route('lending.index')->with('success', 'เพิ่มอุปกรณ์สำเร็จ!');
     }
+    public function edit($id)
+    {
+        $item = Item::findOrFail($id);
+        $itemTypes = ItemType::all(); // ดึงข้อมูลประเภทอุปกรณ์ทั้งหมด
+
+        return view('lending.edit-item', compact('item', 'itemTypes'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'item_code' => 'required|string|max:255',
+            'item_name' => 'required|string|max:255',
+            'item_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'item_type' => 'required|exists:item_type,id',
+            'price' => 'required|numeric',
+            'item_quantity' => 'required|integer|min:0',
+        ]);
+
+        $item = Item::findOrFail($id);
+        $item->item_code = $request->input('item_code');
+        $item->item_name = $request->input('item_name');
+
+        if ($request->hasFile('item_picture')) {
+            $imagePath = $request->file('item_picture')->store('images', 'public');
+            $item->item_picture = basename($imagePath);
+        }
+
+        $item->item_type_id = $request->input('item_type');
+        $item->price = $request->input('price');
+        $item->item_quantity = $request->input('item_quantity');
+        $item->save();
+
+        return redirect()->route('lending.index')->with('success', 'Item updated successfully!');
+    }
 }
 
