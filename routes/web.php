@@ -8,13 +8,11 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Middleware\IsAdmin;
-use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\BorrowingController;
 use App\Http\Controllers\StadiumController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\LendingController;
 
 Route::get('/', function () {
     return view('home');
@@ -44,7 +42,7 @@ Route::put('/profile/update', [ProfileController::class, 'update'])->name('profi
 Route::resource('stadiums', StadiumController::class);
 Route::resource('users', UserController::class);
 Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
-Route::get('/borrowings', [BorrowingController::class, 'index'])->name('borrowings.index');
+
 
 
 Route::group(['middleware' => ['auth', 'is_admin']], function() {
@@ -56,3 +54,10 @@ Route::get('/stadium', [StadiumController::class, 'show'])->name('stadium.show')
 
 // เส้นทางสำหรับการจอง
 Route::get('/booking', [BookingController::class, 'index'])->name('booking');
+// เส้นทางสำหรับการยืม
+Route::get('/lending', [LendingController::class, 'index'])->name('lending.index');
+Route::get('/borrow-item/{id}', [LendingController::class, 'borrowItem'])->name('borrow-item');
+Route::get('/edit-item/{id}', [LendingController::class, 'editItem'])->name('edit-item');
+Route::get('/repair', [LendingController::class, 'repair'])->name('repair');
+Route::get('/add-item', [LendingController::class, 'addItem'])->name('add-item');
+Route::post('/store-item', [LendingController::class, 'storeItem'])->name('store-item');

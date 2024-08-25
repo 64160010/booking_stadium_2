@@ -20,9 +20,21 @@
                         @foreach ($stadiums as $stadium)
                         <div class="mb-4">
                             <div class="card border-light">
-                                <div class="card-body">
+                                <div class="card-body border stadium-card">
                                     <h5 class="card-title">{{ $stadium->stadium_name }}</h5>
                                     <p class="card-text">ราคา: {{ number_format($stadium->stadium_price) }} บาท</p>
+                                    <p class="card-text">สถานะ: 
+                                        <span class="badge 
+                                            @if ($stadium->stadium_status == 'พร้อมให้บริการ') 
+                                                bg-success
+                                            @elseif ($stadium->stadium_status == 'ปิดปรับปรุง') 
+                                                bg-danger
+                                            @else 
+                                                bg-secondary
+                                            @endif">
+                                            {{ $stadium->stadium_status }}
+                                        </span>
+                                    </p>
                                     <div class="d-flex flex-wrap">
                                         @foreach (['11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00'] as $slot)
                                             @php
@@ -40,7 +52,7 @@
                                                     }
                                                 }
                                             @endphp
-                                            <button class="btn {{ $status }} text-white me-2 mb-2" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $slot }}">{{ $slot }}</button>
+                                            <button class="btn {{ $status }} text-white me-2 mb-2 time-slot-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $slot }}">{{ $slot }}</button>
                                         @endforeach
                                     </div>
                                 </div>
@@ -66,5 +78,20 @@
         window.location.href = `{{ route('booking') }}?date=${date}`;
     }
 </script>
+@endpush
+
+@push('styles')
+<style>
+    .stadium-card {
+        border: 2px solid #007bff; /* เพิ่มกรอบรอบสนาม */
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .time-slot-btn {
+        border: 2px solid #ccc; /* เพิ่มกรอบรอบเวลา */
+        padding: 5px 10px;
+    }
+</style>
 @endpush
 @endsection

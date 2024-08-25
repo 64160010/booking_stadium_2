@@ -41,6 +41,10 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('booking') }}">{{ __('จองสนาม') }}</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('lending') }}">{{ __('ยืมอุปกรณ์') }}</a>
+                        </li>
+                        
                         
                         @guest
                             @if (Route::has('login'))
