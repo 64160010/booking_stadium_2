@@ -11,53 +11,19 @@
                 <div class="card-body">
                     <form action="{{ route('users.store') }}" method="POST">
                         @csrf
-                        <div class="mb-3">
-                            <label for="fname" class="form-label">ชื่อ</label>
-                            <input type="text" class="form-control @error('fname') is-invalid @enderror" id="fname" name="fname" value="{{ old('fname') }}" required>
-                            @error('fname')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <!-- Existing fields -->
 
+                        <!-- Time slots -->
                         <div class="mb-3">
-                            <label for="lname" class="form-label">นามสกุล</label>
-                            <input type="text" class="form-control @error('lname') is-invalid @enderror" id="lname" name="lname" value="{{ old('lname') }}" required>
-                            @error('lname')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="email" class="form-label">อีเมล</label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>
-                            @error('email')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">เบอร์โทร</label>
-                            <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" required>
-                            @error('phone')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="password" class="form-label">รหัสผ่าน</label>
-                            <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
-                            @error('password')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="is_admin" class="form-label">สถานะ</label>
-                            <select class="form-select @error('is_admin') is-invalid @enderror" id="is_admin" name="is_admin">
-                                <option value="0" {{ old('is_admin') == '0' ? 'selected' : '' }}>ผู้ใช้</option>
-                                <option value="1" {{ old('is_admin') == '1' ? 'selected' : '' }}>แอดมิน</option>
-                            </select>
-                            @error('is_admin')
+                            <label for="time_slots" class="form-label">ช่วงเวลาที่สามารถจองได้</label>
+                            <div id="time-slots-container">
+                                <div class="time-slot-entry">
+                                    <input type="text" class="form-control @error('time_slots.*') is-invalid @enderror" name="time_slots[]" placeholder="เช่น 11:00 - 12:00">
+                                </div>
+                            </div>
+                            <button type="button" id="add-time-slot" class="btn btn-secondary mt-2">เพิ่มช่วงเวลา</button>
+                            <button type="button" id="remove-time-slot" class="btn btn-danger mt-2">ลบช่วงเวลา</button>
+                            @error('time_slots')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -69,4 +35,28 @@
         </div>
     </div>
 </div>
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const timeSlotsContainer = document.getElementById('time-slots-container');
+        const addButton = document.getElementById('add-time-slot');
+        const removeButton = document.getElementById('remove-time-slot');
+        
+        addButton.addEventListener('click', function() {
+            const newEntry = document.createElement('div');
+            newEntry.classList.add('time-slot-entry');
+            newEntry.innerHTML = '<input type="text" class="form-control mt-2" name="time_slots[]" placeholder="เช่น 11:00 - 12:00">';
+            timeSlotsContainer.appendChild(newEntry);
+        });
+
+        removeButton.addEventListener('click', function() {
+            const entries = timeSlotsContainer.querySelectorAll('.time-slot-entry');
+            if (entries.length > 1) {
+                timeSlotsContainer.removeChild(entries[entries.length - 1]);
+            }
+        });
+    });
+</script>
+@endsection
 @endsection

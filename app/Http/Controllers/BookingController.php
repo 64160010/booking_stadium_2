@@ -8,6 +8,18 @@ use App\Models\BookingStadium;
 
 class BookingController extends Controller
 {
+    public function store(Request $request)
+{
+    $date = Carbon::parse($request->input('date'));
+    $today = Carbon::now();
+    $maxDate = $today->copy()->addDays(7);
+
+    if ($date < $today || $date > $maxDate) {
+        return redirect()->back()->withErrors('วันที่ที่เลือกต้องอยู่ภายใน 7 วันจากวันนี้');
+    }
+
+    // Proceed with booking logic
+}
     public function index(Request $request)
     {
         // รับวันที่จาก query string หรือใช้วันที่ปัจจุบัน

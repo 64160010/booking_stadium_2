@@ -1,13 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
-
 <div class="container-fluid mt-4">
     <div class="row justify-content-center">
         <div class="col-12">
             <div class="card shadow-lg border-0">
                 <div class="card-header bg-primary text-white text-center">
-                    <h4>{{ __('การจัดการสนาม') }}</h4>
+                    <h4>{{ __('รายการสนามทั้งหมด') }}</h4>
                 </div>
                 <div class="card-body p-3">
                     @if(Auth::user()->is_admin == 1)
@@ -20,7 +19,7 @@
                                 <th>ชื่อสนาม</th>
                                 <th>ราคา</th>
                                 <th>สถานะ</th>
-                                <th>ช่วงเวลาจอง</th>
+                                <th>ช่วงเวลา</th>
                                 @if(Auth::user()->is_admin == 1)
                                     <th>การจัดการ</th>
                                 @endif
@@ -31,7 +30,6 @@
                             <tr>
                                 <td>{{ $stadium->stadium_name }}</td>
                                 <td>{{ $stadium->stadium_price }} บาท</td>
-                                
                                 <td>
                                     @if($stadium->stadium_status == 'พร้อมให้บริการ')
                                         <span class="badge bg-success">{{ $stadium->stadium_status }}</span>
@@ -40,11 +38,11 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <div class="d-flex justify-content-between">
-                                        @for ($i = 11; $i <= 17; $i++)
-                                            <button class="btn btn-outline-primary">{{ $i }}:00-{{ $i+1 }}:00</button>
-                                        @endfor
-                                    </div>
+                                    <ul>
+                                        @foreach ($stadium->timeSlots as $timeSlot)
+                                            <li>{{ $timeSlot->time_slot }}</li>
+                                        @endforeach
+                                    </ul>
                                 </td>
                                 @if(Auth::user()->is_admin == 1)
                                     <td>
@@ -65,5 +63,4 @@
         </div>
     </div>
 </div>
-
 @endsection

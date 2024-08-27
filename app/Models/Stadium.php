@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Stadium extends Model
 {
-    public function timeSlots()
+   
+public function timeSlots()
 {
-    return $this->hasMany(StadiumTime::class);
+    return $this->hasMany(TimeSlot::class, 'stadium_id');
 }
+
 
     use HasFactory;
 
@@ -20,8 +22,9 @@ class Stadium extends Model
     protected $fillable = [
         'stadium_name', 
         'stadium_price', 
-        'stadium_picture', 
         'stadium_status'
     ];
+
+    
 }
 

@@ -9,7 +9,7 @@
                     <h4>{{ __('เพิ่มสนามใหม่') }}</h4>
                 </div>
                 <div class="card-body p-3">
-                    <form action="{{ route('stadiums.store') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('stadiums.store') }}" method="POST">
                         @csrf
                         <div class="mb-3">
                             <label for="stadium_name" class="form-label">ชื่อสนาม</label>
@@ -29,17 +29,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        
 
-                        {{-- <div class="mb-3">
-                            <label for="stadium_picture" class="form-label">รูปภาพ</label>
-                            <input type="file" class="form-control @error('stadium_picture') is-invalid @enderror" id="stadium_picture" name="stadium_picture" required>
-                            @error('stadium_picture')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div> --}}
-                          
-                
                         <div class="mb-3">
                             <label for="stadium_status" class="form-label">สถานะ</label>
                             <select class="form-select @error('stadium_status') is-invalid @enderror" id="stadium_status" name="stadium_status" required>
@@ -52,6 +42,18 @@
                             @enderror
                         </div>
 
+                        <div class="mb-3">
+                            <label for="time_slots" class="form-label">ช่วงเวลา</label>
+                            <div id="time-slots-container">
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00 - 12:00" required>
+                                    <button type="button" class="btn btn-outline-danger remove-time-slot">ลบ</button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-success" id="add-time-slot">เพิ่มช่วงเวลา</button>
+                        </div>
+                        
+
                         <button type="submit" class="btn btn-primary">เพิ่มสนาม</button>
                     </form>
                 </div>
@@ -59,4 +61,30 @@
         </div>
     </div>
 </div>
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('time-slots-container');
+        const addButton = document.getElementById('add-time-slot');
+
+        addButton.addEventListener('click', function() {
+            const div = document.createElement('div');
+            div.classList.add('input-group', 'mb-2');
+            div.innerHTML = `
+                <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00 - 12:00" required>
+                <button type="button" class="btn btn-outline-danger remove-time-slot">ลบ</button>
+            `;
+            container.appendChild(div);
+        });
+
+        container.addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-time-slot')) {
+                event.target.parentElement.remove();
+            }
+        });
+    });
+</script>
 @endsection
+@endsection
+

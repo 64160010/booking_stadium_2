@@ -41,25 +41,28 @@
                                                  class="img-thumbnail" 
                                                  style="max-width: 100px; max-height: 100px; object-fit: cover;">
                                         </td>
-                                        <td>{{ $item->itemType->type_name }}</td>
+                                        <td>{{ $item->itemType->type_name }}</td> <!-- ใช้ itemType เพื่อดึงชื่อประเภท -->
                                         <td>{{ $item->price }} บาท</td>
                                         <td>{{ $item->borrowed_quantity }}</td>
                                         <td>{{ $item->repair_quantity }}</td>
+                                        <td>{{ $item->total_quantity - $item->borrowed_quantity - $item->repair_quantity }}</td>
                                         <td>
-                                            {{ $item->total_quantity - $item->borrowed_quantity - $item->repair_quantity }}
-                                        </td>
-                                        <td>
-                                            <a href="{{ route('borrow-item', $item->id) }}" class="btn btn-success btn-sm">ยืม</a>
-                                            <a href="{{ route('edit-item', $item->id) }}" class="btn btn-secondary btn-sm mt-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-                                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.233.131l-5 1.5a.5.5 0 0 1-.606-.606l1.5-5a.5.5 0 0 1 .131-.233l10-10zM11.207 3H13.5L3 13.5V11.207L11.207 3zM15 4.5 13.5 3 12 4.5 13.5 6 15 4.5zM1.5 13l-1 3 3-1 8.5-8.5-2-2L1.5 13z"/>
-                                                </svg>
-                                            </a>
                                             
+                                                <a href="{{ route('borrow-item', $item->id) }}" class="btn btn-success btn-sm d-inline">ยืม</a>
+                                                <a href="{{ route('edit-item', $item->id) }}" class="btn btn-secondary btn-sm d-inline ms-2">แก้ไข</a>
+                                                <form action="{{ route('delete-item', $item->id) }}" method="POST" class="d-inline ms-2">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?');">ลบ</button>
+                                                </form>
+                                            
+                                            
+                                        </td>
                                         </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
+                                
                             </table>
                         </div>
                     </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use App\Models\ItemType; // ต้อง import Model สำหรับ item_type
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class LendingController extends Controller
 {
@@ -87,5 +88,20 @@ class LendingController extends Controller
 
         return redirect()->route('lending.index')->with('success', 'Item updated successfully!');
     }
+
+    public function destroy($id)
+{
+    $item = Item::findOrFail($id);
+    
+    // ลบไฟล์รูปภาพจาก storage (ถ้าจำเป็น)
+    if ($item->item_picture && Storage::exists('public/images/' . $item->item_picture)) {
+        Storage::delete('public/images/' . $item->item_picture);
+    }
+    
+    // ลบข้อมูลจากฐานข้อมูล
+    $item->delete();
+    
+    return redirect()->route('lending.index')->with('success', 'ลบรายการสำเร็จแล้ว');
 }
 
+}
