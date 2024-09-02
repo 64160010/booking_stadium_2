@@ -63,6 +63,8 @@ Route::get('/booking', [BookingController::class, 'index'])->name('booking');
 
 // เส้นทางสำหรับการยืม
 Route::get('/lending', [LendingController::class, 'index'])->name('lending.index');
+        
+
 Route::get('/borrow-item/{id}', [LendingController::class, 'borrowItem'])->name('borrow-item');
 Route::get('/items/{id}/edit', [LendingController::class, 'edit'])->name('edit-item');
 Route::put('/items/{id}', [LendingController::class, 'update'])->name('update-item');

@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    
     <meta charset="UTF-8">
 
     <!-- CSRF Token -->
@@ -12,15 +11,13 @@
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
-    
+
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 </head>
 <body>
-    
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
@@ -44,7 +41,6 @@
                         {{-- <li class="nav-item">
                             <a class="nav-link" href="{{ route('lending') }}">{{ __('ยืมอุปกรณ์') }}</a>
                         </li> --}}
-                        
                         
                         @guest
                             @if (Route::has('login'))

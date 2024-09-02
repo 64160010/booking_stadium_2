@@ -64,7 +64,7 @@
     </div>
 </div>
 
-@section('scripts')
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('time-slots-container');
@@ -87,5 +87,5 @@
         });
     });
 </script>
-@endsection
+@endpush
 @endsection

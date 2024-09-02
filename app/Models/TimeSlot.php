@@ -16,10 +16,10 @@ class TimeSlot extends Model
         'stadium_id',
     ];
 
-    // ความสัมพันธ์: time slot เป็นของ stadium
-    public function stadium()
-    {
-        return $this->belongsTo(Stadium::class);
-    }
+    // TimeSlot.php
+public function stadium()
+{
+    return $this->belongsTo(Stadium::class);
+}
 }
 

@@ -47,11 +47,14 @@
                             <div id="time-slots-container">
                                 <div class="input-group mb-2">
                                     <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00 - 12:00" required>
-                                    <button type="button" class="btn btn-outline-danger remove-time-slot">ลบ</button>
+                                    <button type="button" class="btn btn-outline-danger remove-time-slot" aria-label="ลบช่วงเวลา">ลบ</button>
                                 </div>
                             </div>
                             <button type="button" class="btn btn-outline-success" id="add-time-slot">เพิ่มช่วงเวลา</button>
                         </div>
+                        
+                        
+                        
                         
 
                         <button type="submit" class="btn btn-primary">เพิ่มสนาม</button>
@@ -62,29 +65,36 @@
     </div>
 </div>
 
-@section('scripts')
+@push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const container = document.getElementById('time-slots-container');
-        const addButton = document.getElementById('add-time-slot');
+   document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('time-slots-container');
+    const addButton = document.getElementById('add-time-slot');
 
-        addButton.addEventListener('click', function() {
-            const div = document.createElement('div');
-            div.classList.add('input-group', 'mb-2');
-            div.innerHTML = `
-                <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00 - 12:00" required>
-                <button type="button" class="btn btn-outline-danger remove-time-slot">ลบ</button>
-            `;
-            container.appendChild(div);
-        });
-
-        container.addEventListener('click', function(event) {
-            if (event.target.classList.contains('remove-time-slot')) {
-                event.target.parentElement.remove();
-            }
-        });
+    addButton.addEventListener('click', function() {
+        const div = document.createElement('div');
+        div.classList.add('input-group', 'mb-2');
+        div.innerHTML = `
+            <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00 - 12:00" required>
+            <button type="button" class="btn btn-outline-danger remove-time-slot" aria-label="ลบช่วงเวลา">ลบ</button>
+        `;
+        container.appendChild(div);
     });
-</script>
-@endsection
-@endsection
 
+    container.addEventListener('click', function(event) {
+        if (event.target.classList.contains('remove-time-slot')) {
+            // Only remove the time slot if there is more than one
+            if (container.children.length > 1) {
+                event.target.parentElement.remove();
+            } else {
+                alert('อย่างน้อยต้องมีช่วงเวลาอย่างน้อยหนึ่งช่วง');
+            }
+        }
+    });
+});
+
+
+
+</script>
+@endpush
+@endsection
