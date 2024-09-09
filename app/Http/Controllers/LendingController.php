@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Stadium;
 use App\Models\Item;
 use App\Models\ItemType; // ต้อง import Model สำหรับ item_type
 use Illuminate\Http\Request;
@@ -103,5 +104,37 @@ class LendingController extends Controller
     
     return redirect()->route('lending.index')->with('success', 'ลบรายการสำเร็จแล้ว');
 }
+//การยืม
+public function borrowItem($id)
+{
+    $item = Item::findOrFail($id);
+    $stadiums = Stadium::all(); // ดึงข้อมูลสนามที่สามารถเลือกได้ทั้งหมด
+
+    return view('lending.borrow-item', compact('item', 'stadiums'));
+}
+
+public function storeBorrow(Request $request)
+{
+    $request->validate([
+        'borrow_date' => 'required|date',
+        'borrow_start_time' => 'required|date_format:H:i',
+        'borrow_end_time' => 'required|date_format:H:i|after:borrow_start_time',
+        'borrow_quantity' => 'required|integer|min:1',
+        'stadium_id' => 'required|exists:stadium,id', // ตรวจสอบว่ามีสนามที่เลือกในฐานข้อมูลจริง
+    ]);
+
+    Borrow::create([
+        'borrow_date' => $request->borrow_date,
+        'borrow_start_time' => $request->borrow_start_time,
+        'borrow_end_time' => $request->borrow_end_time,
+        'borrow_quantity' => $request->borrow_quantity,
+        'stadium_select_id' => $request->stadium_id, // บันทึกสนามที่เลือก
+        'item_id' => $request->item_id,
+    ]);
+
+    return redirect()->route('lending.index')->with('success', 'ยืมสำเร็จแล้ว!');
+}
+
+
 
 }

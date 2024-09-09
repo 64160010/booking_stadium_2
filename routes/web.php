@@ -64,8 +64,11 @@ Route::get('/booking', [BookingController::class, 'index'])->name('booking');
 // เส้นทางสำหรับการยืม
 Route::get('/lending', [LendingController::class, 'index'])->name('lending.index');
         
-
+//เมื่อกดปุ่มยืมแล้ว
 Route::get('/borrow-item/{id}', [LendingController::class, 'borrowItem'])->name('borrow-item');
+Route::post('/borrow', [LendingController::class, 'storeBorrow'])->name('borrow-item.store');
+
+
 Route::get('/items/{id}/edit', [LendingController::class, 'edit'])->name('edit-item');
 Route::put('/items/{id}', [LendingController::class, 'update'])->name('update-item');
 Route::get('/repair', [LendingController::class, 'repair'])->name('repair');
@@ -73,3 +76,5 @@ Route::get('/add-item', [LendingController::class, 'addItem'])->name('add-item')
 Route::post('/store-item', [LendingController::class, 'storeItem'])->name('store-item');
 Route::delete('/lending/{id}', [LendingController::class, 'destroy'])->name('lending.destroy');
 Route::delete('/item/{id}', [LendingController::class, 'destroy'])->name('delete-item');
+
+

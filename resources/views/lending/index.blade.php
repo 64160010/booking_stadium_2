@@ -52,6 +52,7 @@
                                         <td>
                                             @if(Auth::user()->is_admin == 0)
                                             <a href="{{ route('borrow-item', $item->id) }}" class="btn btn-success btn-sm d-inline">ยืม</a>
+
                                             @endif
                                             
                                             @if(Auth::user()->is_admin == 1)
