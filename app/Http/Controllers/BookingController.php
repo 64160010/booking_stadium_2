@@ -60,4 +60,24 @@ class BookingController extends Controller
         // ส่งข้อมูลไปยัง view
         return view('booking', compact('stadiums', 'bookings', 'date'));
     }
+   // ใน BookingController::confirmation
+   public function confirmation(Request $request)
+   {
+       $date = $request->input('date');
+       $timeSlots = explode(',', $request->input('timeSlots')); // Convert back to array
+       $stadiums = $request->input('stadiums'); // Ensure you handle this correctly
+       $stadiumPrices = $request->input('stadiumPrices'); // Ensure this is handled correctly
+       $totalHours = $request->input('totalHours');
+       $totalPrice = $request->input('totalPrice');
+   
+       // Retrieve user data if needed
+       $user = auth()->user(); // Or retrieve user from database if necessary
+   
+       return view('booking.confirmation', compact('date', 'timeSlots', 'stadiums', 'stadiumPrices', 'totalHours', 'totalPrice', 'user'));
+   }
+   
+
+   
+
+
 }
