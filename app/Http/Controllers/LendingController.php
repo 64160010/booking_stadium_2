@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Stadium;
 use App\Models\Item;
-use App\Models\ItemType; // ต้อง import Model สำหรับ item_type
+use App\Models\ItemType;
+use App\Models\Borrow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,8 +13,8 @@ class LendingController extends Controller
 {
     public function index()
     {
-        // ดึงข้อมูลจากฐานข้อมูล
-        $items = Item::with('itemType')->get(); // ใช้ with เพื่อดึงข้อมูลประเภท
+        // ดึงข้อมูลอุปกรณ์พร้อมกับประเภท
+        $items = Item::with('itemType')->get();
 
         // ส่งข้อมูลไปยัง view
         return view('lending.index', compact('items'));
@@ -21,7 +22,8 @@ class LendingController extends Controller
 
     public function addItem()
     {
-        $itemTypes = ItemType::all(); // ดึงรายการประเภทอุปกรณ์
+        // ดึงข้อมูลประเภทอุปกรณ์ทั้งหมด
+        $itemTypes = ItemType::all();
         return view('lending.add-item', compact('itemTypes'));
     }
 
@@ -37,6 +39,7 @@ class LendingController extends Controller
         ]);
 
         // เก็บรูปภาพ
+        $imageName = null;
         if ($request->hasFile('item_picture')) {
             $imageName = time().'.'.$request->item_picture->extension();
             $request->item_picture->storeAs('public/images', $imageName);
@@ -47,17 +50,18 @@ class LendingController extends Controller
             'item_code' => $request->item_code,
             'item_name' => $request->item_name,
             'item_picture' => $imageName,
-            'item_type_id' => $request->item_type_id, // ใช้ item_type_id
+            'item_type_id' => $request->item_type_id,
             'price' => $request->price,
             'item_quantity' => $request->item_quantity,
         ]);
 
         return redirect()->route('lending.index')->with('success', 'เพิ่มอุปกรณ์สำเร็จ!');
     }
+
     public function edit($id)
     {
         $item = Item::findOrFail($id);
-        $itemTypes = ItemType::all(); // ดึงข้อมูลประเภทอุปกรณ์ทั้งหมด
+        $itemTypes = ItemType::all();
 
         return view('lending.edit-item', compact('item', 'itemTypes'));
     }
@@ -78,6 +82,11 @@ class LendingController extends Controller
         $item->item_name = $request->input('item_name');
 
         if ($request->hasFile('item_picture')) {
+            // ลบรูปภาพเก่าถ้ามี
+            if ($item->item_picture && Storage::exists('public/images/' . $item->item_picture)) {
+                Storage::delete('public/images/' . $item->item_picture);
+            }
+
             $imagePath = $request->file('item_picture')->store('images', 'public');
             $item->item_picture = basename($imagePath);
         }
@@ -87,54 +96,51 @@ class LendingController extends Controller
         $item->item_quantity = $request->input('item_quantity');
         $item->save();
 
-        return redirect()->route('lending.index')->with('success', 'Item updated successfully!');
+        return redirect()->route('lending.index')->with('success', 'อัพเดตอุปกรณ์สำเร็จ!');
     }
 
     public function destroy($id)
-{
-    $item = Item::findOrFail($id);
-    
-    // ลบไฟล์รูปภาพจาก storage (ถ้าจำเป็น)
-    if ($item->item_picture && Storage::exists('public/images/' . $item->item_picture)) {
-        Storage::delete('public/images/' . $item->item_picture);
+    {
+        $item = Item::findOrFail($id);
+        
+        // ลบรูปภาพถ้ามี
+        if ($item->item_picture && Storage::exists('public/images/' . $item->item_picture)) {
+            Storage::delete('public/images/' . $item->item_picture);
+        }
+        
+        $item->delete();
+        
+        return redirect()->route('lending.index')->with('success', 'ลบอุปกรณ์สำเร็จ!');
     }
-    
-    // ลบข้อมูลจากฐานข้อมูล
-    $item->delete();
-    
-    return redirect()->route('lending.index')->with('success', 'ลบรายการสำเร็จแล้ว');
-}
-//การยืม
-public function borrowItem($id)
-{
-    $item = Item::findOrFail($id);
-    $stadiums = Stadium::all(); // ดึงข้อมูลสนามที่สามารถเลือกได้ทั้งหมด
 
-    return view('lending.borrow-item', compact('item', 'stadiums'));
-}
+    // จัดการการยืมอุปกรณ์
+    public function borrowItem($id)
+    {
+        $item = Item::findOrFail($id);
+        $stadiums = Stadium::with('timeSlots')->get(); // ดึงข้อมูลสนามพร้อมช่วงเวลา
 
-public function storeBorrow(Request $request)
-{
-    $request->validate([
-        'borrow_date' => 'required|date',
-        'borrow_start_time' => 'required|date_format:H:i',
-        'borrow_end_time' => 'required|date_format:H:i|after:borrow_start_time',
-        'borrow_quantity' => 'required|integer|min:1',
-        'stadium_id' => 'required|exists:stadium,id', // ตรวจสอบว่ามีสนามที่เลือกในฐานข้อมูลจริง
-    ]);
+        return view('lending.borrow-item', compact('item', 'stadiums'));
+    }
 
-    Borrow::create([
-        'borrow_date' => $request->borrow_date,
-        'borrow_start_time' => $request->borrow_start_time,
-        'borrow_end_time' => $request->borrow_end_time,
-        'borrow_quantity' => $request->borrow_quantity,
-        'stadium_select_id' => $request->stadium_id, // บันทึกสนามที่เลือก
-        'item_id' => $request->item_id,
-    ]);
+    public function storeBorrow(Request $request)
+    {
+        $request->validate([
+            'borrow_date' => 'required|date',
+            'borrow_start_time' => 'required|date_format:H:i',
+            'borrow_end_time' => 'required|date_format:H:i|after:borrow_start_time',
+            'borrow_quantity' => 'required|integer|min:1',
+            'stadium_id' => 'required|exists:stadiums,id',
+        ]);
 
-    return redirect()->route('lending.index')->with('success', 'ยืมสำเร็จแล้ว!');
-}
+        Borrow::create([
+            'borrow_date' => $request->borrow_date,
+            'borrow_start_time' => $request->borrow_start_time,
+            'borrow_end_time' => $request->borrow_end_time,
+            'borrow_quantity' => $request->borrow_quantity,
+            'stadium_id' => $request->stadium_id,
+            'item_id' => $request->item_id,
+        ]);
 
-
-
+        return redirect()->route('lending.index')->with('success', 'การยืมอุปกรณ์สำเร็จ!');
+    }
 }

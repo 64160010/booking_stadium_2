@@ -29,7 +29,7 @@ class RegisterController extends Controller
      * @var string
      */
     // protected $redirectTo = '/home';
-    //kem เปลี่ยนเป็น 
+     
     protected $redirectTo = '/login';
     /**
      * Create a new controller instance.
@@ -53,7 +53,7 @@ class RegisterController extends Controller
             'fname' => ['required', 'string', 'max:100'],
             'lname' => ['required', 'string', 'max:100'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone' => ['required', 'string', 'max:15', 'unique:users'],
+            'phone' => ['required', 'digits:10', 'regex:/^[0-9]+$/', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
     }

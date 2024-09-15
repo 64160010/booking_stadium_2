@@ -29,7 +29,10 @@
                         <div class="mb-4">
                             <div class="card border-light">
                                 <div class="card-body border stadium-card">
-                                    <h5 class="card-title">{{ $stadium->stadium_name }}</h5>
+                                    <h5 class="card-title">
+                                        <input type="checkbox" name="stadium_id" value="{{ $stadium->id }}" id="stadium-{{ $stadium->id }}" data-stadium-name="{{ $stadium->stadium_name }}">
+                                        <label for="stadium-{{ $stadium->id }}">{{ $stadium->stadium_name }}</label>
+                                    </h5>
                                     <p class="card-text">ราคา: {{ number_format($stadium->stadium_price) }} บาท</p>
                                     <p class="card-text">สถานะ: 
                                         <span class="badge 
@@ -50,7 +53,7 @@
                                             @if($stadium->stadium_status == 'ปิดปรับปรุง')
                                                 <button class="btn btn-outline-secondary m-1" disabled>{{ $timeSlot->time_slot }}</button>
                                             @else
-                                                <button class="btn btn-outline-primary m-1 time-slot-button" data-time="{{ $timeSlot->time_slot }}" onclick="selectTimeSlot(this)">{{ $timeSlot->time_slot }}</button>
+                                                <button class="btn btn-outline-primary m-1 time-slot-button" data-stadium="{{ $stadium->id }}" data-time="{{ $timeSlot->time_slot }}" onclick="selectTimeSlot(this)">{{ $timeSlot->time_slot }}</button>
                                             @endif
                                         @endforeach
                                     </div>
@@ -58,7 +61,7 @@
                             </div>
                         </div>
                         @endforeach
-
+                        
                         <!-- Booking Button -->
                         <div class="text-center">
                             <button class="btn btn-primary" onclick="submitBooking()">จองสนาม</button>
@@ -72,19 +75,25 @@
 
 @push('scripts')
 <script>
-    let selectedTimeSlots = [];
+    let selectedTimeSlots = {}; // Object to store selected time slots per stadium
 
     function selectTimeSlot(button) {
         const time = button.getAttribute('data-time');
+        const stadiumId = button.getAttribute('data-stadium');
+
+        // Initialize the stadium entry in selectedTimeSlots if not present
+        if (!selectedTimeSlots[stadiumId]) {
+            selectedTimeSlots[stadiumId] = [];
+        }
 
         // Toggle button state
-        if (selectedTimeSlots.includes(time)) {
+        if (selectedTimeSlots[stadiumId].includes(time)) {
             // Remove time from the array if already selected
-            selectedTimeSlots = selectedTimeSlots.filter(slot => slot !== time);
+            selectedTimeSlots[stadiumId] = selectedTimeSlots[stadiumId].filter(slot => slot !== time);
             button.classList.remove('active');
         } else {
             // Add time to the array if not selected
-            selectedTimeSlots.push(time);
+            selectedTimeSlots[stadiumId].push(time);
             button.classList.add('active');
         }
 
@@ -94,55 +103,70 @@
     function submitBooking() {
     const date = document.getElementById('booking-date').value;
 
-    if (selectedTimeSlots.length === 0) {
+    if (!date) {
+        alert('กรุณาเลือกวันที่');
+        return;
+    }
+
+    if (Object.keys(selectedTimeSlots).length === 0) {
         alert('กรุณาเลือกช่วงเวลาที่ต้องการจอง');
+        return;
+    }
+
+    const stadiumIds = Object.keys(selectedTimeSlots);
+
+    if (stadiumIds.length === 0) {
+        alert('กรุณาเลือกสนาม');
         return;
     }
 
     const bookingData = {
         date: date,
-        timeSlots: selectedTimeSlots.join(','), // Convert array to a comma-separated string
-        stadiums: @json($stadiums), // Ensure stadiums are included
-        // Add additional data if needed
+        timeSlots: selectedTimeSlots, // Keep the object structure for sending
+        _token: '{{ csrf_token() }}' // CSRF token for security
     };
 
-    // Create a form and submit it to the booking confirmation page
-    const form = document.createElement('form');
-    form.method = 'GET'; // or 'POST' if necessary
-    form.action = '{{ route('booking.confirmation') }}'; // The route to the confirmation page
-
-    // Append data as hidden inputs
-    for (const key in bookingData) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = bookingData[key];
-        form.appendChild(input);
-    }
-
-    document.body.appendChild(form);
-    form.submit();
+    fetch('{{ route('booking.store') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(bookingData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = `{{ route('booking.confirmation') }}?date=${encodeURIComponent(date)}&stadiums=${encodeURIComponent(JSON.stringify(selectedTimeSlots))}`;
+        } else {
+            alert('เกิดข้อผิดพลาดในการจองสนาม');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการจองสนาม');
+    });
 }
 
 
-    
 
-    function updateBookings() {
-        const bookingDateInput = document.getElementById('booking-date');
-        const selectedDate = new Date(bookingDateInput.value);
-        const today = new Date();
-        const maxDate = new Date();
-        maxDate.setDate(today.getDate() + 7);
+function updateBookings() {
+    const bookingDateInput = document.getElementById('booking-date');
+    const selectedDate = new Date(bookingDateInput.value);
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setDate(today.getDate() + 7);
 
-        if (selectedDate < today || selectedDate > maxDate) {
-            alert('กรุณาเลือกวันที่ภายใน 7 วันจากวันนี้');
-            bookingDateInput.value = ''; // Clear the input
-            return;
-        }
-
-        // Proceed with updating bookings
-        window.location.href = `{{ route('booking') }}?date=${bookingDateInput.value}`;
+    if (selectedDate < today || selectedDate > maxDate) {
+        alert('กรุณาเลือกวันที่ภายใน 7 วันจากวันนี้');
+        bookingDateInput.value = ''; // Clear the input
+        return;
     }
+
+    // Proceed with updating bookings
+    window.location.href = `{{ route('booking') }}?date=${encodeURIComponent(bookingDateInput.value)}`;
+}
+
 </script>
 @endpush
 
