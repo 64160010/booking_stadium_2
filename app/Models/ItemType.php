@@ -13,8 +13,10 @@ class ItemType extends Model
 
     protected $primaryKey = 'id';
     
+    public $timestamps = false; // ปิดการใช้งาน timestamps
+
     protected $fillable = [
         'type_name',
+        'type_code', // เพิ่มคอลัมน์ type_code หากมี
     ];
 }
-

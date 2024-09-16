@@ -48,8 +48,6 @@ Route::resource('users', UserController::class);
 // เส้นทางการจัดการการชำระเงิน
 Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
 
-// เส้นทางการจัดการการยืม
-Route::get('/borrowings', [BorrowingController::class, 'index'])->name('borrowings.index');
 
 // เส้นทางที่ต้องการผู้ดูแลระบบ
 Route::group(['middleware' => ['auth', 'is_admin']], function() {

@@ -5,7 +5,7 @@
 @section('content')
     <div class="container-fluid mt-4">
         <div class="row justify-content-center">
-            <div class="col-12">
+            <div class="col-lg-8 col-md-10 col-sm-12">
                 <div class="card shadow-lg border-0">
                     <div class="card-header bg-primary text-white text-center">
                         <h4>{{ __('แก้ไขอุปกรณ์') }}</h4>
@@ -14,14 +14,6 @@
                         <form action="{{ route('update-item', $item->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
-
-                            <div class="mb-3">
-                                <label for="item_code" class="form-label">รหัสอุปกรณ์</label>
-                                <input type="text" class="form-control @error('item_code') is-invalid @enderror" id="item_code" name="item_code" value="{{ old('item_code', $item->item_code) }}" required>
-                                @error('item_code')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
 
                             <div class="mb-3">
                                 <label for="item_name" class="form-label">ชื่ออุปกรณ์</label>
@@ -35,7 +27,9 @@
                                 <label for="item_picture" class="form-label">รูปภาพ</label>
                                 <input type="file" class="form-control @error('item_picture') is-invalid @enderror" id="item_picture" name="item_picture">
                                 @if ($item->item_picture)
-                                    <img src="{{ asset('storage/images/' . $item->item_picture) }}" alt="{{ $item->item_name }}" class="img-thumbnail mt-2" style="max-width: 100px; max-height: 100px; object-fit: cover;">
+                                    <div class="mt-2">
+                                        <img src="{{ asset('storage/images/' . $item->item_picture) }}" alt="{{ $item->item_name }}" class="img-thumbnail" style="max-width: 100px; max-height: 100px; object-fit: cover;">
+                                    </div>
                                 @endif
                                 @error('item_picture')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -43,15 +37,15 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="item_type" class="form-label">ประเภท</label>
-                                <select class="form-select @error('item_type') is-invalid @enderror" id="item_type" name="item_type" required>
+                                <label for="item_type_id" class="form-label">ประเภท</label>
+                                <select class="form-select @error('item_type_id') is-invalid @enderror" id="item_type_id" name="item_type_id" required>
                                     @foreach($itemTypes as $itemType)
                                         <option value="{{ $itemType->id }}" {{ $item->item_type_id == $itemType->id ? 'selected' : '' }}>
                                             {{ $itemType->type_name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('item_type')
+                                @error('item_type_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
