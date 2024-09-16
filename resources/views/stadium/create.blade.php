@@ -58,6 +58,7 @@
                         
 
                         <button type="submit" class="btn btn-primary">เพิ่มสนาม</button>
+                        <a href="{{ route('stadiums.index') }}" class="btn btn-secondary">ยกเลิก</a>
                     </form>
                 </div>
             </div>

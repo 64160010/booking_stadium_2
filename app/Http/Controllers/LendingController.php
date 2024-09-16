@@ -16,11 +16,8 @@ class LendingController extends Controller
         // ดึงข้อมูลอุปกรณ์พร้อมกับประเภท
         $items = Item::with('itemType')->get();
 
-         // ดึงข้อมูลประเภทอุปกรณ์ทั้งหมด
-        $itemTypes = ItemType::all();
-
         // ส่งข้อมูลไปยัง view
-        return view('lending.index', compact('items', 'itemTypes'));
+        return view('lending.index', compact('items'));
     }
 
     public function addItem()

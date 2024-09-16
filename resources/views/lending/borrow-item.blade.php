@@ -55,7 +55,7 @@
                             <div class="form-group col-md-6">
                                 <label for="borrow_quantity">{{ __('จำนวน') }}</label>
                                 <input type="number" id="borrow_quantity" name="borrow_quantity" class="form-control"
-                                    min="1" max="{{ $item->item_quantity }}" value="1" required>
+                                    min="1" max="{{ $item->item_quantity }}" value="0" required>
                             </div>
                         </div>
 

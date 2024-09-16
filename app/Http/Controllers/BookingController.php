@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Stadium;
 use Illuminate\Http\Request;
 use App\Models\BookingStadium;
@@ -9,71 +10,56 @@ use Carbon\Carbon;
 
 class BookingController extends Controller
 {
+
     public function index(Request $request)
-{
-    $date = $request->query('date', date('Y-m-d'));
-    $stadiums = Stadium::all();
-    $bookings = BookingStadium::where('booking_date', $date)->get();
+    {
+        $date = $request->query('date', date('Y-m-d'));
+        $stadiums = Stadium::all();
+        $bookings = BookingStadium::where('booking_date', $date)->get();
 
-    return view('booking', compact('stadiums', 'bookings', 'date'));
-}
+        return view('booking', compact('stadiums', 'bookings', 'date'));
+    }
 
-public function store(Request $request)
-{
-    // ตรวจสอบข้อมูลที่รับเข้ามา
-    $validatedData = $request->validate([
-        'date' => 'required|date|after_or_equal:today',
-        'timeSlots' => 'required|array',
-        'timeSlots.*' => 'array', // ตรวจสอบให้แน่ใจว่า timeSlots เป็น array ของ arrays
-        'timeSlots.*.*' => 'string', // timeSlots ต้องเป็น string
-    ]);
-
-    $date = $validatedData['date'];
-    $timeSlots = $validatedData['timeSlots'];
-
-    // บันทึกข้อมูลการจอง
-    foreach ($timeSlots as $stadiumId => $slots) {
-        foreach ($slots as $slot) {
-            Booking::create([
-                'stadium_id' => $stadiumId,
-                'booking_date' => $date,
-                'time_slot' => $slot,
-                // เพิ่มฟิลด์อื่นๆ ที่จำเป็น
-            ]);
+   
+    public function store(Request $request)
+    {
+        $validatedData = $request->validate([
+            'date' => 'required|date',
+            'timeSlots' => 'required|array'
+        ]);
+    
+        foreach ($validatedData['timeSlots'] as $stadiumId => $timeSlots) {
+            foreach ($timeSlots as $timeSlot) {
+                // ดึง ID ของ time slot
+                $timeSlotId = \DB::table('time_slot')
+                    ->where('time_slot', $timeSlot) // ช่วงเวลาที่ส่งมาจากฟอร์ม
+                    ->value('id'); // ดึง ID ของช่วงเวลานั้น
+    
+                if (!$timeSlotId) {
+                    return response()->json(['success' => false, 'message' => 'เวลานี้ไม่ถูกต้อง']);
+                }
+    
+                // ตรวจสอบการจองซ้ำ
+                $existingBooking = BookingStadium::where('booking_date', $validatedData['date'])
+                    ->where('time_slot_id', $timeSlotId)
+                    ->exists();
+    
+                if ($existingBooking) {
+                    return response()->json(['success' => false, 'message' => 'เวลานี้ถูกจองแล้ว']);
+                }
+    
+                // บันทึกการจอง
+                BookingStadium::create([
+                    'booking_date' => $validatedData['date'],
+                    'time_slot_id' => $timeSlotId,
+                    'user_id' => auth()->id(),
+                    'booking_status' => 'รอการตรวจสอบ'
+                ]);
+            }
         }
+    
+        return response()->json(['success' => true]);
     }
 
-    return response()->json(['success' => true]);
 }
 
-
-public function confirmation(Request $request)
-{
-    $date = $request->input('date');
-    $stadiumsData = json_decode($request->input('stadiums'), true);
-
-    if (!$date || !$stadiumsData) {
-        return redirect()->route('booking')->withErrors('ข้อมูลไม่ครบถ้วน');
-    }
-
-    // ดึงข้อมูลสนามและเวลาจากฐานข้อมูล
-    $stadiums = Stadium::whereIn('id', array_keys($stadiumsData))->get();
-
-    $totalPrice = 0;
-    foreach ($stadiums as $stadium) {
-        foreach ($stadiumsData[$stadium->id] as $timeSlot) {
-            // คำนวณราคาสำหรับการจอง
-            $totalPrice += $stadium->stadium_price;
-        }
-    }
-
-    return view('confirmation', [
-        'date' => $date,
-        'stadiumsData' => $stadiumsData,
-        'stadiums' => $stadiums,
-        'totalPrice' => $totalPrice
-    ]);
-}
-
-
-}

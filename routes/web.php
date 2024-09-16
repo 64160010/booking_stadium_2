@@ -48,6 +48,8 @@ Route::resource('users', UserController::class);
 // เส้นทางการจัดการการชำระเงิน
 Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
 
+// เส้นทางการจัดการการยืม
+Route::get('/borrowings', [BorrowingController::class, 'index'])->name('borrowings.index');
 
 // เส้นทางที่ต้องการผู้ดูแลระบบ
 Route::group(['middleware' => ['auth', 'is_admin']], function() {
@@ -75,6 +77,5 @@ Route::post('/store-item', [LendingController::class, 'storeItem'])->name('store
 Route::delete('/lending/{id}', [LendingController::class, 'destroy'])->name('lending.destroy');
 Route::delete('/item/{id}', [LendingController::class, 'destroy'])->name('delete-item');
 
+
 Route::post('/booking/store', [BookingController::class, 'store'])->name('booking.store');
-Route::get('/booking/confirmation', [BookingController::class, 'confirmation'])->name('booking.confirmation');
-Route::get('/booking', [BookingController::class, 'index'])->name('booking');

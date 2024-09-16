@@ -51,30 +51,30 @@
     @push('scripts')
         <script>
             function confirmBooking() {
-                if (confirm('คุณต้องการยืนยันการจองใช่หรือไม่?')) {
-                    $.ajax({
-                        url: '{{ route('booking.store') }}',
-                        method: 'POST',
-                        data: {
-                            date: '{{ $date }}',
-                            timeSlots: @json($timeSlots),
-                            stadiums: @json($stadiums),
-                            stadiumPrices: @json($stadiumPrices),
-                            totalHours: '{{ $totalHours }}',
-                            totalPrice: '{{ $totalPrice }}',
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            alert('การจองสำเร็จ!');
-                            // อาจจะ Redirect ไปยังหน้าที่ต้องการ เช่น หน้าแสดงประวัติการจอง
-                            window.location.href = '/booking/history'; // ตัวอย่างการ redirect
-                        },
-                        error: function(error) {
-                            alert('เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่');
-                        }
-                    });
-                }
+    if (confirm('คุณต้องการยืนยันการจองใช่หรือไม่?')) {
+        $.ajax({
+            url: '{{ route('booking.store') }}',
+            method: 'POST',
+            data: {
+                date: '{{ $date }}',
+                timeSlots: @json($timeSlots),
+                stadiums: @json($stadiums),
+                stadiumPrices: @json($stadiumPrices),
+                totalHours: '{{ $totalHours }}',
+                totalPrice: '{{ $totalPrice }}',
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                alert('การจองสำเร็จ!');
+                window.location.href = '/booking/history'; // ตัวอย่างการ redirect
+            },
+            error: function(error) {
+                alert('เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่');
             }
+        });
+    }
+}
+
         </script>
     @endpush
 

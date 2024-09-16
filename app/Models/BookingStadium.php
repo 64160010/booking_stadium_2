@@ -2,20 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class BookingStadium extends Model
 {
-    protected $table = 'booking_stadium'; // ชื่อของตารางในฐานข้อมูล
-   
-    protected $fillable = [
-        'booking_date',
-        'booking_status',
-        'user_id',
-        'time_slot_id',
-        'stadium_id'
-    ];
+    use HasFactory;
 
-    public $timestamps = false; // กำหนดเป็น false หากไม่ใช้ timestamps
+    protected $table = 'booking_stadium';
+
+    protected $fillable = ['booking_date', 'booking_status', 'user_id', 'time_slot_id'];
 }
+
+
 

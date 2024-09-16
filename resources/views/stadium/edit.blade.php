@@ -56,7 +56,10 @@
                             <button type="button" class="btn btn-outline-success" id="add-time-slot">เพิ่มช่วงเวลา</button>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">อัปเดตสนาม</button>
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">อัปเดตสนาม</button>
+                            <a href="{{ route('stadiums.index') }}" class="btn btn-secondary">ยกเลิก</a>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -86,7 +89,6 @@
             }
         });
     });
-    
 </script>
 @endpush
 @endsection

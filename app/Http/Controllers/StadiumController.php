@@ -105,6 +105,6 @@ public function destroy($id)
     // ส่งกลับไปยังหน้าแสดงรายการสนาม
     return redirect()->route('stadiums.index')->with('success', 'สนามถูกลบเรียบร้อยแล้ว');
 }
-
     
+
 }    
