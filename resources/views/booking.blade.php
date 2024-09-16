@@ -55,9 +55,11 @@
         </div>
     </div>
 </main>
+
 @push('scripts')
 <script>
     let selectedTimeSlots = {};
+    let selectedStadiums = {};
 
     function selectTimeSlot(button, stadiumId) {
         const time = button.getAttribute('data-time');
@@ -75,46 +77,88 @@
         }
     }
 
-    function submitBooking() {
+    function updateBookings() {
         const date = document.getElementById('booking-date').value;
+        const minDate = new Date();
+        const maxDate = new Date();
+        maxDate.setDate(minDate.getDate() + 7);
 
-        if (!date) {
-            alert('กรุณาเลือกวันที่');
-            return;
+        const selectedDate = new Date(date);
+
+        if (date && (selectedDate < minDate || selectedDate > maxDate)) {
+            alert('กรุณาเลือกวันที่ภายใน 7 วัน');
+            document.getElementById('booking-date').value = '';
         }
-
-        if (Object.keys(selectedTimeSlots).length === 0) {
-            alert('กรุณาเลือกช่วงเวลาที่ต้องการจอง');
-            return;
-        }
-
-        const bookingData = {
-            date: date,
-            timeSlots: selectedTimeSlots,
-            _token: '{{ csrf_token() }}'
-        };
-
-        fetch('{{ route('booking.store') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(bookingData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('booking-result').innerHTML = '<div class="alert alert-success">การจองสำเร็จ</div>';
-            } else {
-                document.getElementById('booking-result').innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('booking-result').innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาดในการจองสนาม</div>';
-        });
     }
+
+    function submitBooking() {
+    const date = document.getElementById('booking-date').value;
+    const selectedStadiums = Object.keys(selectedTimeSlots);
+
+    if (!date) {
+        alert('กรุณาเลือกวันที่');
+        return;
+    }
+
+    if (selectedStadiums.length === 0) {
+        alert('กรุณาเลือกสนาม');
+        return;
+    }
+
+    let hasSelectedTime = false;
+    for (let stadiumId of selectedStadiums) {
+        if (selectedTimeSlots[stadiumId].length > 0) {
+            hasSelectedTime = true;
+            break;
+        }
+    }
+
+    if (!hasSelectedTime) {
+        alert('กรุณาเลือกช่วงเวลาที่ต้องการจอง');
+        return;
+    }
+
+    const bookingData = {
+        date: date,
+        timeSlots: selectedTimeSlots,
+        _token: '{{ csrf_token() }}'
+    };
+
+    fetch('{{ route('booking.store') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(bookingData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('booking-result').innerHTML = '<div class="alert alert-success">การจองสำเร็จ</div>';
+            // เปลี่ยนสีของปุ่มเวลาที่เลือก
+            updateSelectedButtons();
+        } else {
+            document.getElementById('booking-result').innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('booking-result').innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาดในการจองสนาม</div>';
+    });
+}
+
+function updateSelectedButtons() {
+    document.querySelectorAll('.time-slot-button').forEach(button => {
+        const stadiumId = button.getAttribute('data-stadium');
+        const time = button.getAttribute('data-time');
+        if (selectedTimeSlots[stadiumId] && selectedTimeSlots[stadiumId].includes(time)) {
+            button.classList.add('btn-warning'); // เปลี่ยนสีปุ่มเป็นสีส้ม
+            button.classList.remove('btn-outline-primary');
+        }
+    });
+}
+
 </script>
 @endpush
 @endsection
