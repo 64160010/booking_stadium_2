@@ -2,9 +2,9 @@
 
 namespace App\Http\Middleware;
 
+namespace App\Http\Middleware;
+
 use Closure;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
 class IsAdmin
@@ -12,15 +12,24 @@ class IsAdmin
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return mixed
      */
-    //edit
     public function handle($request, Closure $next)
-    { 
-        if (Auth::check() && Auth::user()->is_admin == 1) {
-            return $next($request);
+    {
+        // ตรวจสอบว่าผู้ใช้ได้เข้าสู่ระบบหรือไม่
+        if (!Auth::check()) {
+            // ถ้ายังไม่ได้เข้าสู่ระบบ ให้ redirect ไปหน้า login
+            return redirect('login')->with('error', 'กรุณาเข้าสู่ระบบก่อน');
         }
 
-        return redirect('home')->with('error', "You don't have admin access.");
+        // ถ้าผู้ใช้เข้าสู่ระบบแล้ว ให้ตรวจสอบว่าเป็นผู้ดูแลระบบหรือไม่
+        if (Auth::user()->is_admin != 1) {
+            return redirect('home')->with('error', "คุณไม่มีสิทธิ์เข้าถึงหน้านี้");
+        }
+
+        // ถ้าผู้ใช้เป็นแอดมิน ให้ดำเนินการต่อ
+        return $next($request);
     }
 }

@@ -127,19 +127,22 @@ class LendingController extends Controller
 
     // จัดการการยืมอุปกรณ์
     public function borrowItem($id)
-    {
-        $item = Item::findOrFail($id);
-        $stadiums = Stadium::with('timeSlots')->get(); // ดึงข้อมูลสนามพร้อมช่วงเวลา
-
-        return view('lending.borrow-item', compact('item', 'stadiums'));
-    }
-
-    public function storeBorrow(Request $request)
 {
+    $item = Item::findOrFail($id);
+    $stadiums = Stadium::with('timeSlots')->get(); // ดึงข้อมูลสนามพร้อมช่วงเวลา
+
+    return view('lending.borrow-item', compact('item', 'stadiums'));
+}
+
+
+public function storeBorrow(Request $request)
+{
+    $this->middleware('auth'); // ตรวจสอบว่าผู้ใช้เข้าสู่ระบบแล้ว
+
     $request->validate([
         'borrow_date' => 'required|date',
-        'time_slots' => 'required|array', // ใช้เป็น array สำหรับเลือกหลายช่วงเวลา
-        'time_slots.*' => 'exists:time_slots,id', // ตรวจสอบว่าแต่ละช่วงเวลามีอยู่ในตาราง time_slots
+        'time_slots' => 'required|array',
+        'time_slots.*' => 'exists:time_slots,id',
         'borrow_quantity' => 'required|integer|min:1',
         'stadium_id' => 'required|exists:stadiums,id',
     ]);
@@ -151,7 +154,6 @@ class LendingController extends Controller
         'item_id' => $request->item_id,
     ]);
 
-    // บันทึกหลายช่วงเวลาที่เลือก
     $borrow->timeSlots()->attach($request->time_slots);
 
     return redirect()->route('lending.index')->with('success', 'การยืมอุปกรณ์สำเร็จ!');

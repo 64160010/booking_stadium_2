@@ -11,13 +11,16 @@
                         <h4>{{ __('รายการอุปกรณ์') }}</h4>
                     </div>
 
-                    @if(Auth::user()->is_admin)
-                        <div class="card-body p-3">
-                            <div class="d-flex justify-content-end mb-3">
-                                <a href="{{ route('repair') }}" class="btn btn-danger me-2">ซ่อม</a>
-                                <a href="{{ route('add-item') }}" class="btn btn-primary">เพิ่ม</a>
+                    @auth
+                        @if(Auth::user()->is_admin)
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-end mb-3">
+                                    <a href="{{ route('repair') }}" class="btn btn-danger me-2">ซ่อม</a>
+                                    <a href="{{ route('add-item') }}" class="btn btn-primary">เพิ่ม</a>
+                                </div>
                             </div>
-                    @endif
+                        @endif
+                    @endauth
 
                     <div class="table-responsive">
                         <table class="table table-bordered">
@@ -55,28 +58,36 @@
                                         <td>{{ $item->repair_quantity }}</td>
                                         <td>{{ $item->item_quantity - $item->borrowed_quantity - $item->repair_quantity }}</td>
                                         <td>
-                                            @if(!Auth::user()->is_admin)
-                                                <a href="{{ route('borrow-item', $item->id) }}" class="btn btn-success btn-sm d-inline">ยืม</a>
-                                            @endif
+                                            @auth
+                                                <!-- หากผู้ใช้เข้าสู่ระบบแล้ว สามารถกดปุ่มยืมได้ -->
+                                                @if(!Auth::user()->is_admin)
+                                                <a href="{{ route('borrow-item', $item->id) }}" class="btn btn-primary">
+                                                    {{ __('ยืม') }}
+                                                </a>
+                                                @endif
+                                            @else
+                                                <!-- หากผู้ใช้ยังไม่ได้เข้าสู่ระบบ ให้แสดงปุ่มเข้าสู่ระบบ -->
+                                                <a href="{{ route('login') }}" class="btn btn-primary">
+                                                    {{ __('เข้าสู่ระบบเพื่อยืม') }}
+                                                </a>
+                                            @endauth
 
-                                            @if(Auth::user()->is_admin)
-                                                <a href="{{ route('edit-item', $item->id) }}" class="btn btn-secondary btn-sm d-inline ms-2">แก้ไข</a>
-                                                <form action="{{ route('delete-item', $item->id) }}" method="POST" class="d-inline ms-2">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?');">ลบ</button>
-                                                </form>
-                                            @endif
+                                            @auth
+                                                @if(Auth::user()->is_admin)
+                                                    <a href="{{ route('edit-item', $item->id) }}" class="btn btn-secondary btn-sm d-inline ms-2">แก้ไข</a>
+                                                    <form action="{{ route('delete-item', $item->id) }}" method="POST" class="d-inline ms-2">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?');">ลบ</button>
+                                                    </form>
+                                                @endif
+                                            @endauth
                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
-
-                    @if(Auth::user()->is_admin)
-                        </div>
-                    @endif
                 </div>
             </div>
         </div>

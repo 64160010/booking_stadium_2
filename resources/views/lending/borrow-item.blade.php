@@ -12,6 +12,8 @@
                 </div>
 
                 <div class="card-body">
+                    <!-- ตรวจสอบว่าผู้ใช้เข้าสู่ระบบหรือยัง -->
+                    @if(Auth::check())
                     <form method="POST" action="{{ route('borrow-item.store') }}">
                         @csrf
                         <input type="hidden" name="item_id" value="{{ $item->id }}">
@@ -88,6 +90,12 @@
                         <!-- ปุ่มยืนยันการยืม -->
                         <button type="submit" class="btn btn-primary btn-block mt-3">{{ __('ยืม') }}</button>
                     </form>
+                    @else
+                    <div class="text-center">
+                        <p>{{ __('กรุณาเข้าสู่ระบบเพื่อทำการยืมอุปกรณ์') }}</p>
+                        <a href="{{ route('login') }}" class="btn btn-primary">{{ __('เข้าสู่ระบบ') }}</a>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
