@@ -1,10 +1,10 @@
 a{color:#a600ff;} 
-a:hover{color:#ff8585;} 
+a:hover{color: #4800ff;} 
 .auth-wrapper {
     position: relative; /* เพิ่ม position relative เพื่อให้ .circles อยู่ด้านหลัง */
     height: 100vh;
-    background-color: #ff8585; 
-    background: linear-gradient(-45deg, #a600ff, #ff8585);
+    background-color:  #4800ff; 
+    background: linear-gradient(-45deg, #4800ff, #93ff85);
     background-attachment: fixed;
     background-size: cover;
     height: calc(var(--vh, 1vh) * 100);
@@ -17,11 +17,11 @@ a:hover{color:#ff8585;}
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -2px rgb(0 0 0 / 5%);
 }
 .btn-primary{
-      background:linear-gradient(-45deg,#a600ff,#ff8585);
+      
   transition: all .5s ease-out;
 }
 .btn-primary:hover{
-      background:linear-gradient(-45deg,#ff8585,#a600ff);
+    box-shadow: 0 0 0 0.2rem rgba(0, 30, 255, 0.25);
 }
 .btn-primary:not(:disabled):not(.disabled).active, .btn-primary:not(:disabled):not(.disabled):active, .show>.btn-primary.dropdown-toggle {
   background-color: #ff8585;
@@ -140,6 +140,7 @@ a:hover{color:#ff8585;}
     animation-delay: 0s;
     animation-duration: 11s;
 }
+
   @keyframes animate {
  
     0%{

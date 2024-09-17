@@ -7,7 +7,7 @@
         <div class="row justify-content-center">
             <div class="col-12">
                 <div class="card shadow-lg border-0">
-                    <div class="card-header bg-primary text-white text-center">
+                    <div class="card-header" style="text-align: center; color:white; background-color:#4800ff">
                         <h4>{{ __('รายการอุปกรณ์') }}</h4>
                     </div>
 
