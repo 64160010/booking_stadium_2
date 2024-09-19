@@ -23,6 +23,14 @@
                     @endauth
 
                     <div class="table-responsive">
+                        <!-- ฟอร์มเลือกวันที่ -->
+                        <div class="mb-4">
+                            <label for="borrow-date" class="form-label">เลือกวันที่</label>
+                            <input type="date" id="borrow-date" class="form-control" 
+                                min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" 
+                                max="{{ \Carbon\Carbon::now()->addDays(7)->format('Y-m-d') }}">
+                        </div>
+                        
                         <table class="table table-bordered">
                             <thead class="bg-primary text-white">
                                 <tr>
@@ -38,7 +46,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($items as $item)
+                                @forelse($items as $item)
                                     <tr>
                                         <td>{{ $item->item_code }}</td>
                                         <td>{{ $item->item_name }}</td>
@@ -59,19 +67,19 @@
                                         <td>{{ $item->item_quantity - $item->borrowed_quantity - $item->repair_quantity }}</td>
                                         <td>
                                             @auth
-                                                <!-- หากผู้ใช้เข้าสู่ระบบแล้ว สามารถกดปุ่มยืมได้ -->
                                                 @if(!Auth::user()->is_admin)
-                                                <a href="{{ route('borrow-item', $item->id) }}" class="btn btn-primary">
-                                                    {{ __('ยืม') }}
-                                                </a>
+                                                <a href="{{ route('borrow-item', ['item_id' => $item->id, 'date' => request('date')]) }}" 
+                                                    class="btn btn-primary" 
+                                                    onclick="setBorrowDate(event, {{ $item->id }})">
+                                                     {{ __('ยืม') }}
+                                                 </a>
+                                                 
                                                 @endif
                                             @else
-                                                <!-- หากผู้ใช้ยังไม่ได้เข้าสู่ระบบ ให้แสดงปุ่มเข้าสู่ระบบ -->
-                                                <a href="{{ route('login') }}" class="btn btn-primary">
-                                                    {{ __('เข้าสู่ระบบเพื่อยืม') }}
+                                                <a href="{{ route('login') }}" class="btn btn-primary" onclick="alert('โปรดเข้าสู่ระบบก่อนทำการยืม');">
+                                                    {{ __('ยืม') }}
                                                 </a>
                                             @endauth
-
                                             @auth
                                                 @if(Auth::user()->is_admin)
                                                     <a href="{{ route('edit-item', $item->id) }}" class="btn btn-secondary btn-sm d-inline ms-2">แก้ไข</a>
@@ -84,7 +92,11 @@
                                             @endauth
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="9" class="text-center">{{ __('ไม่พบรายการอุปกรณ์') }}</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -92,4 +104,23 @@
             </div>
         </div>
     </div>
+
+@push('scripts')
+<script>
+    function setBorrowDate(event, itemId) {
+        event.preventDefault();
+        const date = document.getElementById('borrow-date').value;
+        if (!date) {
+            alert('กรุณาเลือกวันที่ก่อนทำการยืม');
+            return;
+        }
+        
+        // แก้ไขการสร้าง URL โดยส่งพารามิเตอร์อย่างถูกต้อง
+        const url = `{{ route('borrow-item', ['item_id' => ':itemId', 'date' => ':date']) }}`;
+        const finalUrl = url.replace(':itemId', itemId).replace(':date', date);
+
+        window.location.href = finalUrl;
+    }
+</script>
+@endpush
 @endsection

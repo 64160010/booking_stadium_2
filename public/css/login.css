@@ -1,10 +1,69 @@
 a{color:#a600ff;} 
-a:hover{color: #4800ff;} 
+a:hover{color: #0004ff;} 
+.navbar{
+background-color: #3a3a3a;
+}
+.navbar .nav-link,
+.navbar .navbar-brand,
+.navbar  {
+    color: white ;
+}
+
+.navbar .dropdown-menu {
+    background-color:  #3a3a3a;
+}
+
+.navbar .dropdown-item {
+    color: white !important;
+}
+
+.navbar .dropdown-item:hover {
+    background-color: #495057;
+}
+.navbar .nav-link[href*="login"],
+.navbar .nav-link[href*="register"] {
+    border: 2px solid white;
+    padding: 5px 15px;
+    border-radius: 5px;
+    margin-right:5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.navbar .nav-link[href*="login"]:hover,
+.navbar .nav-link[href*="register"]:hover {
+    background-color: white;
+    color: #0f64be;
+}
+.form-row .form-group {
+    flex-grow: 1;
+    min-width: 150px;
+}
+
+.form-row .form-group input,
+.form-row .form-group select {
+    width: 100%;
+    box-sizing: border-box;
+}
+.navbar-toggler{
+    background-color: white !important;
+}
+
+
+.navbar .nav-link:hover{
+    color: white;
+}
+.navbar .navbar-brand:hover{
+    color:white !important;
+
+}
+
+
+
 .auth-wrapper {
     position: relative; /* เพิ่ม position relative เพื่อให้ .circles อยู่ด้านหลัง */
     height: 100vh;
-    background-color:  #4800ff; 
-    background: linear-gradient(-45deg, #4800ff, #93ff85);
+    background-color:  #0004ff; 
+    background: linear-gradient(-45deg, #0004ff, #93ff85);
     background-attachment: fixed;
     background-size: cover;
     height: calc(var(--vh, 1vh) * 100);

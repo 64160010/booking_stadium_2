@@ -35,20 +35,20 @@ Route::get('/admin/home', [HomeController::class, 'adminHome'])
 Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
 Route::post('/calendar', [CalendarController::class, 'index']);
 
-// เส้นทางการแก้ไขโปรไฟล์
+// การจัดการโปรไฟล์
 Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
 
-// เส้นทางการจัดการสนาม
+// การจัดการสนาม
 Route::resource('stadiums', StadiumController::class);
 
-// เส้นทางการจัดการผู้ใช้
+// การจัดการผู้ใช้
 Route::resource('users', UserController::class);
 
-// เส้นทางการจัดการการชำระเงิน
+// การจัดการการชำระเงิน
 Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
 
-// เส้นทางการจัดการการยืม
+// การจัดการการยืม
 Route::get('/borrowings', [BorrowingController::class, 'index'])->name('borrowings.index');
 
 // เส้นทางที่ต้องการผู้ดูแลระบบ
@@ -61,31 +61,30 @@ Route::group(['middleware' => ['auth', 'is_admin']], function() {
 // เส้นทางสำหรับการจองสนาม
 Route::get('/booking', [BookingController::class, 'index'])->name('booking');
 
-// เส้นทางสำหรับการยืม// เส้นทางสำหรับหน้าแสดงรายการอุปกรณ์ (อนุญาตให้ guest เข้าถึงได้)
-
+// เส้นทางสำหรับการยืมอุปกรณ์
 Route::get('/lending', [LendingController::class, 'index'])->name('lending.index');
-        
-// เส้นทางสำหรับการยืมอุปกรณ์ (ต้องเข้าสู่ระบบก่อน)
-Route::get('/borrow-item/{id}', [LendingController::class, 'borrowItem'])
+
+// เส้นทางสำหรับการยืมอุปกรณ์ รองรับพารามิเตอร์วันที่ (เฉพาะผู้ใช้ที่ล็อกอินเท่านั้นที่สามารถยืมได้)
+Route::get('/borrow-item/{item_id}/{date?}', [LendingController::class, 'borrowItem'])
     ->name('borrow-item')
     ->middleware('auth');
 
-    // เส้นทางสำหรับบันทึกข้อมูลการยืม (ต้องเข้าสู่ระบบก่อน)
+// เส้นทางสำหรับการบันทึกข้อมูลการยืม
 Route::post('/borrow', [LendingController::class, 'storeBorrow'])
-->name('borrow-item.store')
-->middleware('auth');
-    
-    Route::get('/items/{id}/edit', [LendingController::class, 'edit'])->name('edit-item');
-    Route::put('/items/{id}', [LendingController::class, 'update'])->name('update-item');
-    
-    Route::get('/repair', [LendingController::class, 'repair'])->name('repair');
-    Route::get('/add-item', [LendingController::class, 'addItem'])->name('add-item');
-    Route::post('/store-item', [LendingController::class, 'storeItem'])->name('store-item');
-    
-    Route::delete('/lending/{id}', [LendingController::class, 'destroy'])->name('lending.destroy');
-    Route::delete('/item/{id}', [LendingController::class, 'destroy'])->name('delete-item');
+    ->name('borrow-item.store')
+    ->middleware('auth');
 
-// เส้นทางการจองสนาม ต้องเข้าสู่ระบบก่อน
+// เส้นทางการจัดการรายการอุปกรณ์
+Route::get('/items/{id}/edit', [LendingController::class, 'edit'])->name('edit-item');
+Route::put('/items/{id}', [LendingController::class, 'update'])->name('update-item');
+Route::delete('/item/{id}', [LendingController::class, 'destroy'])->name('delete-item');
+
+// เส้นทางสำหรับการซ่อมและเพิ่มรายการอุปกรณ์
+Route::get('/repair', [LendingController::class, 'repair'])->name('repair');
+Route::get('/add-item', [LendingController::class, 'addItem'])->name('add-item');
+Route::post('/store-item', [LendingController::class, 'storeItem'])->name('store-item');
+
+// เส้นทางที่ต้องการการล็อกอินสำหรับการจองสนาม
 Route::group(['middleware' => 'auth'], function() {
     Route::post('/booking/store', [BookingController::class, 'store'])->name('booking.store');
 });
