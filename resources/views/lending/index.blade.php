@@ -2,6 +2,13 @@
 
 @section('title', 'รายการอุปกรณ์')
 
+@if(session('success'))
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
+@endif
+
+
 @section('content')
     <div class="container-fluid mt-4">
         <div class="row justify-content-center">
