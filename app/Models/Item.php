@@ -33,13 +33,13 @@ class Item extends Model
             // กำหนดค่าเริ่มต้นสำหรับ item_code ตามประเภท
             $typeCode = '';
             switch ($item->item_type_id) {
-                case 6:
+                case 1:
                     $typeCode = 'FB'; // ลูกฟุตบอล
                     break;
-                case 7:
+                case 2:
                     $typeCode = 'SF'; // รองเท้าฟุตบอล
                     break;
-                case 8:
+                case 3:
                     $typeCode = 'SH'; // เสื้อกั๊ก
                     break;
                 default:

@@ -91,7 +91,7 @@
 
                             <!-- ปุ่มยืม -->
                             
-                            <<form method="POST" action="{{ route('borrow-item.store') }}">
+                            <form method="POST" action="{{ route('borrow-item.store') }}">
                                 @csrf
                                 <!-- ฟิลด์ต่างๆ -->
                                 <input type="hidden" name="item_id" value="{{ $item->id }}">

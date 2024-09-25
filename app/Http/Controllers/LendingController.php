@@ -37,34 +37,47 @@ class LendingController extends Controller
             'price' => 'required|integer',
             'item_quantity' => 'required|integer',
         ]);
-
-        // สร้าง item code ใหม่
+    
+        // ค้นหา item type จาก item_type_id
         $itemType = ItemType::find($request->item_type_id);
+        
+        // ดึงข้อมูลล่าสุดของ item ที่มีรหัสเริ่มต้นด้วย type_code (FB, SF, SH)
         $lastItem = Item::where('item_code', 'LIKE', $itemType->type_code . '%')
             ->orderBy('item_code', 'desc')
             ->first();
-
-        $newCode = $itemType->type_code . str_pad(($lastItem ? intval(substr($lastItem->item_code, 2)) + 1 : 1), 3, '0', STR_PAD_LEFT);
-
+    
+        // สร้างรหัสอุปกรณ์ใหม่
+        if ($lastItem) {
+            // ดึงเฉพาะเลขจาก item_code และบวกเพิ่ม 1
+            $lastCodeNumber = intval(substr($lastItem->item_code, 2)) + 1;
+        } else {
+            // ถ้าไม่มีอุปกรณ์ในประเภทนั้นๆ ให้เริ่มที่ 1
+            $lastCodeNumber = 1;
+        }
+        
+        // สร้างรหัสอุปกรณ์ใหม่ เช่น FB001, SF002
+        $newItemCode = $itemType->type_code . str_pad($lastCodeNumber, 3, '0', STR_PAD_LEFT);
+    
         // เก็บรูปภาพ
         $imageName = null;
         if ($request->hasFile('item_picture')) {
             $imageName = time() . '.' . $request->item_picture->extension();
             $request->item_picture->storeAs('public/images', $imageName);
         }
-
+    
         // บันทึกข้อมูล
         Item::create([
-            'item_code' => $newCode,
+            'item_code' => $newItemCode,  // ใช้รหัสอุปกรณ์ที่สร้างขึ้นใหม่
             'item_name' => $request->item_name,
             'item_picture' => $imageName,
             'item_type_id' => $request->item_type_id,
             'price' => $request->price,
             'item_quantity' => $request->item_quantity,
         ]);
-
+    
         return redirect()->route('lending.index')->with('success', 'เพิ่มอุปกรณ์สำเร็จ!');
     }
+    
 
     public function edit($id)
     {
@@ -133,9 +146,9 @@ class LendingController extends Controller
             'borrow_date' => 'required|date',
             'borrow_quantity' => 'required|integer|min:1',
             'stadium_id' => 'required|exists:stadium,id',
-            'time_slot_id' => 'required', // Ensure this is validated
             'borrow_price' => 'required|numeric',
             'borrow_total_price' => 'required|numeric',
+            'time_slot_id' => 'required|exists:time_slot,id',
             
         ]);
     
@@ -146,7 +159,7 @@ class LendingController extends Controller
         // คำนวณราคารวม
         $pricePerUnit = $item->price;
         $quantity = $request->borrow_quantity;
-        $timeSlotsCount = count(explode(',', $request->borrow_time_slots));
+        $timeSlotsCount = count(explode(',', $request->time_slot_id));
         $totalPrice = $pricePerUnit * $quantity * $timeSlotsCount;
     
         // เก็บข้อมูลการยืมลงในตาราง borrow
@@ -156,7 +169,7 @@ class LendingController extends Controller
             'borrow_date' => $request->borrow_date,
             'borrow_quantity' => $request->borrow_quantity,
             'stadium_id' => $request->stadium_id,
-            'borrow_time_slots' => $request->borrow_time_slots,
+            'time_slot_id' => $request->time_slot_id,  // บันทึก time_slot_id
             'total_price' => $totalPrice,
             'borrow_price' => $request->input('borrow_price'),
         ]);

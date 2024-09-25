@@ -1,5 +1,12 @@
 @extends('layouts.app')
 
+  <!-- Success Message -->
+  @if(session('success'))
+  <div id="success-message" class="alert alert-success mt-3">
+      {{ session('success') }}
+  </div>
+@endif
+
 @section('content')
 <div class="container-fluid px-0">
     <!-- Hero Section -->
@@ -8,15 +15,15 @@
             <h1 class="display-4">ยินดีต้อนรับเข้าสู่เว็บจองสนามฟุตบอล</h1>
             <p class="lead">สามารถจองได้เลยเวลานี้!</p>
         </div>
+    </div>
     </header>
+<body>
+    
 
-    <!-- Success Message -->
-    @if(session('success'))
-        <div id="success-message" class="alert alert-success mt-3">
-            {{ session('success') }}
-        </div>
-    @endif
-</div>
+
+</body>
+  
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
