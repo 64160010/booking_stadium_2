@@ -8,55 +8,89 @@
                 <div class="card-header bg-primary text-white text-center">
                     <h4>{{ __('เพิ่มสมาชิกใหม่') }}</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
+                    <!-- Back Button -->
+                    <a href="{{ route('users.index') }}" class="btn btn-secondary mb-3">ย้อนกลับ</a>
+
+                    <!-- Form Start -->
                     <form action="{{ route('users.store') }}" method="POST">
                         @csrf
-                        <!-- Existing fields -->
 
-                        <!-- Time slots -->
-                        <div class="mb-3">
-                            <label for="time_slots" class="form-label">ช่วงเวลาที่สามารถจองได้</label>
-                            <div id="time-slots-container">
-                                <div class="time-slot-entry">
-                                    <input type="text" class="form-control @error('time_slots.*') is-invalid @enderror" name="time_slots[]" placeholder="เช่น 11:00 - 12:00">
-                                </div>
-                            </div>
-                            <button type="button" id="add-time-slot" class="btn btn-secondary mt-2">เพิ่มช่วงเวลา</button>
-                            <button type="button" id="remove-time-slot" class="btn btn-danger mt-2">ลบช่วงเวลา</button>
-                            @error('time_slots')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                        <!-- First Name -->
+                        <div class="form-group mb-3">
+                            <label for="fname">{{ __('ชื่อ') }}</label>
+                            <input type="text" name="fname" id="fname" class="form-control" placeholder="กรอกชื่อ" value="{{ old('fname') }}" required>
+                            @error('fname')
+                                <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>
 
-                        <button type="submit" class="btn btn-primary">บันทึก</button>
+                        <!-- Last Name -->
+                        <div class="form-group mb-3">
+                            <label for="lname">{{ __('นามสกุล') }}</label>
+                            <input type="text" name="lname" id="lname" class="form-control" placeholder="กรอกนามสกุล" value="{{ old('lname') }}" required>
+                            @error('lname')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <!-- Duplicate Name & Last Name -->
+                        @if($errors->has('duplicate'))
+                            <div class="alert alert-danger">{{ $errors->first('duplicate') }}</div>
+                        @endif
+
+                        <!-- Email -->
+                        <div class="form-group mb-3">
+                            <label for="email">{{ __('อีเมล') }}</label>
+                            <input type="email" name="email" id="email" class="form-control" placeholder="กรอกอีเมล" value="{{ old('email') }}" required>
+                            @error('email')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="form-group mb-3">
+                            <label for="phone">{{ __('เบอร์โทร') }}</label>
+                            <input type="text" name="phone" id="phone" class="form-control" placeholder="กรอกเบอร์โทร" value="{{ old('phone') }}" required>
+                            @error('phone')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <!-- Password -->
+                        <div class="form-group mb-3">
+                            <label for="password">{{ __('รหัสผ่าน') }}</label>
+                            <input type="password" name="password" id="password" class="form-control" placeholder="กรอกรหัสผ่าน" required>
+                            @error('password')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="form-group mb-3">
+                            <label for="password_confirmation">{{ __('ยืนยันรหัสผ่าน') }}</label>
+                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="ยืนยันรหัสผ่าน" required>
+                        </div>
+
+                        <!-- Is Admin -->
+                        <div class="form-group mb-3">
+                            <label for="is_admin">{{ __('สถานะ') }}</label>
+                            <select name="is_admin" id="is_admin" class="form-control">
+                                <option value="0">ผู้ใช้</option>
+                                <option value="1">แอดมิน</option>
+                            </select>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary">{{ __('บันทึกข้อมูล') }}</button>
+                        </div>
                     </form>
+                    <!-- Form End -->
+
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-@section('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const timeSlotsContainer = document.getElementById('time-slots-container');
-        const addButton = document.getElementById('add-time-slot');
-        const removeButton = document.getElementById('remove-time-slot');
-        
-        addButton.addEventListener('click', function() {
-            const newEntry = document.createElement('div');
-            newEntry.classList.add('time-slot-entry');
-            newEntry.innerHTML = '<input type="text" class="form-control mt-2" name="time_slots[]" placeholder="เช่น 11:00 - 12:00">';
-            timeSlotsContainer.appendChild(newEntry);
-        });
-
-        removeButton.addEventListener('click', function() {
-            const entries = timeSlotsContainer.querySelectorAll('.time-slot-entry');
-            if (entries.length > 1) {
-                timeSlotsContainer.removeChild(entries[entries.length - 1]);
-            }
-        });
-    });
-</script>
-@endsection
 @endsection

@@ -18,15 +18,31 @@ class UserController extends Controller
     }
 
     public function store(Request $request) {
+        // ตรวจสอบข้อมูลที่ซ้ำกันในตาราง users
         $request->validate([
             'fname' => 'required',
             'lname' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|',
-            'password' => 'required|min:6',
+            'email' => 'required|email|unique:users,email', // ตรวจสอบอีเมลซ้ำ
+            'phone' => 'required|unique:users,phone', // ตรวจสอบเบอร์โทรซ้ำ
+            'password' => 'required|min:6|confirmed',
             'is_admin' => 'boolean',
+        ], [
+            'email.unique' => 'อีเมลนี้ถูกใช้ไปแล้ว กรุณาใช้อีเมลอื่น', // ข้อความแจ้งเตือนสำหรับอีเมลซ้ำ
+            'phone.unique' => 'เบอร์โทรนี้ถูกใช้ไปแล้ว กรุณาใช้เบอร์โทรอื่น', // ข้อความแจ้งเตือนสำหรับเบอร์โทรซ้ำ
         ]);
-
+    
+        // ตรวจสอบความซ้ำซ้อนของ ชื่อ และ นามสกุล
+        $duplicateUser = User::where('fname', $request->fname)
+                            ->where('lname', $request->lname)
+                            ->first();
+    
+        if ($duplicateUser) {
+            return redirect()->back()->withErrors([
+                'duplicate' => 'ชื่อและนามสกุลนี้ถูกใช้ไปแล้ว กรุณากรอกข้อมูลใหม่'
+            ])->withInput();
+        }
+    
+        // บันทึกข้อมูล
         User::create([
             'fname' => $request->fname,
             'lname' => $request->lname,
@@ -35,9 +51,11 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
             'is_admin' => $request->is_admin,
         ]);
-
+    
         return redirect()->route('users.index')->with('success', 'สมาชิกถูกเพิ่มเรียบร้อยแล้ว');
     }
+    
+    
 
     public function edit(User $user) {
         return view('users.edit', compact('user'));

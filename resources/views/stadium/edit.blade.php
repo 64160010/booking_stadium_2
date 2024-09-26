@@ -73,11 +73,38 @@
         const container = document.getElementById('time-slots-container');
         const addButton = document.getElementById('add-time-slot');
 
+        // ฟังก์ชันสำหรับตรวจสอบรูปแบบเวลา
+        function validateTimeFormat(time) {
+            const timeFormat = /^\d{2}:\d{2}น\.\s*-\s*\d{2}:\d{2}น\.$/; // รูปแบบ 00:00น.-00:00น.
+            return timeFormat.test(time);
+        }
+
+        // เพิ่มการตรวจสอบก่อนส่งฟอร์ม
+        const form = container.closest('form');
+        form.addEventListener('submit', function(event) {
+            const timeSlots = document.querySelectorAll('input[name="time_slots[]"]');
+            let valid = true;
+
+            timeSlots.forEach(function(slot) {
+                if (!validateTimeFormat(slot.value)) {
+                    valid = false;
+                    slot.classList.add('is-invalid'); // เพิ่มคลาสสำหรับแสดงความผิดพลาด
+                } else {
+                    slot.classList.remove('is-invalid'); // ลบคลาสถ้าถูกต้อง
+                }
+            });
+
+            if (!valid) {
+                event.preventDefault(); // ยกเลิกการส่งฟอร์ม
+                alert('กรุณากรอกช่วงเวลาในรูปแบบ 00:00น.-00:00น.'); // แจ้งเตือนข้อผิดพลาด
+            }
+        });
+
         addButton.addEventListener('click', function() {
             const div = document.createElement('div');
             div.classList.add('input-group', 'mb-2');
             div.innerHTML = `
-                <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00 - 12:00" required>
+                <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00น.-12:00น." required>
                 <button type="button" class="btn btn-outline-danger remove-time-slot">ลบ</button>
             `;
             container.appendChild(div);

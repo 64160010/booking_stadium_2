@@ -9,7 +9,7 @@
                     <h4>{{ __('เพิ่มสนามใหม่') }}</h4>
                 </div>
                 <div class="card-body p-3">
-                    <form action="{{ route('stadiums.store') }}" method="POST">
+                    <form action="{{ route('stadiums.store') }}" method="POST" id="stadium-form">
                         @csrf
                         <div class="mb-3">
                             <label for="stadium_name" class="form-label">ชื่อสนาม</label>
@@ -46,16 +46,12 @@
                             <label for="time_slots" class="form-label">ช่วงเวลา</label>
                             <div id="time-slots-container">
                                 <div class="input-group mb-2">
-                                    <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00 - 12:00" required>
+                                    <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00น.-12:00น." required>
                                     <button type="button" class="btn btn-outline-danger remove-time-slot" aria-label="ลบช่วงเวลา">ลบ</button>
                                 </div>
                             </div>
                             <button type="button" class="btn btn-outline-success" id="add-time-slot">เพิ่มช่วงเวลา</button>
                         </div>
-                        
-                        
-                        
-                        
 
                         <button type="submit" class="btn btn-primary">เพิ่มสนาม</button>
                         <a href="{{ route('stadiums.index') }}" class="btn btn-secondary">ยกเลิก</a>
@@ -71,12 +67,13 @@
    document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('time-slots-container');
     const addButton = document.getElementById('add-time-slot');
+    const form = document.getElementById('stadium-form');
 
     addButton.addEventListener('click', function() {
         const div = document.createElement('div');
         div.classList.add('input-group', 'mb-2');
         div.innerHTML = `
-            <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00 - 12:00" required>
+            <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00น.-12:00น." required>
             <button type="button" class="btn btn-outline-danger remove-time-slot" aria-label="ลบช่วงเวลา">ลบ</button>
         `;
         container.appendChild(div);
@@ -92,8 +89,20 @@
             }
         }
     });
-});
 
+    form.addEventListener('submit', function(event) {
+        const timeSlots = document.getElementsByName('time_slots[]');
+        const timeSlotRegex = /^\d{2}:\d{2}น\.-\d{2}:\d{2}น\.$/; // รูปแบบเวลา
+
+        for (let i = 0; i < timeSlots.length; i++) {
+            if (!timeSlotRegex.test(timeSlots[i].value)) {
+                alert('กรุณากรอกช่วงเวลาในรูปแบบ 00:00น.-00:00น.');
+                event.preventDefault(); // หยุดการส่งฟอร์ม
+                return;
+            }
+        }
+    });
+});
 </script>
 @endpush
 @endsection
