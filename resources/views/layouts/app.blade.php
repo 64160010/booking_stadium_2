@@ -56,6 +56,12 @@
                                 <i class="fas fa-basketball-ball me-1"></i> {{ __('ยืมอุปกรณ์') }}
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('lending.borrow-detail') }}">
+                                <i class="fas fa-basketball-ball me-1"></i> {{ __('รายละเอียดการยืมอุปกรณ์') }}
+                            </a>
+                        </li>
+                        
 
                         @guest
                             @if (Route::has('login'))

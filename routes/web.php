@@ -88,3 +88,11 @@ Route::post('/store-item', [LendingController::class, 'storeItem'])->name('store
 Route::group(['middleware' => 'auth'], function() {
     Route::post('/booking/store', [BookingController::class, 'store'])->name('booking.store');
 });
+
+
+// เส้นทางสำหรับการแสดงรายละเอียดการยืมอุปกรณ์
+Route::get('/lending/borrow-detail', [LendingController::class, 'borrowDetail'])
+    ->name('lending.borrow-detail')
+    ->middleware('auth'); // เพิ่ม middleware ถ้าต้องการให้ต้องล็อกอิน
+
+
