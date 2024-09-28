@@ -47,7 +47,7 @@ class Borrow extends Model
     // สัมพันธ์กับตาราง BorrowDetail
     public function details()
 {
-    return $this->hasMany(BorrowDetail::class);
+    return $this->hasMany(BorrowDetail::class, 'borrow_id'); 
 }
 }
 
