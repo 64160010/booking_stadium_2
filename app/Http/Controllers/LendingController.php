@@ -132,7 +132,6 @@ class LendingController extends Controller
     // เก็บข้อมูลการยืม
     public function storeBorrow(Request $request)
 {
-    
     $request->validate([
         'item_id' => 'required|exists:item,id',
         'borrow_date' => 'required|date',
@@ -183,7 +182,7 @@ class LendingController extends Controller
             ]);
 
             // ส่งกลับไปยังหน้ารายละเอียด
-            return redirect()->route('lending.borrow-detail')->with('success', 'ระบบเพิ่มรายการแล้ว โปรดตรวจสอบรายการอีกครั้งก่อนชำระเงิน');
+            return redirect()->route('lending.borrow-detail')->with('success', 'โปรดตรวจสอบที่หน้ารายละเอียดการจองอีกครั้งก่อนจะชำระเงิน');
         } else {
             return redirect()->back()->with('error', 'เกิดข้อผิดพลาด');
         }
@@ -196,19 +195,9 @@ class LendingController extends Controller
     public function borrowDetail()
     {
         // ดึงข้อมูลการยืมทั้งหมด (หรือปรับให้เหมาะสมตามที่คุณต้องการ)
-        $borrows = Borrow::with('item', 'user', 'details','stadium')->where('users_id', auth()->user()->id)->get(); // ตัวอย่างดึงข้อมูลตามผู้ใช้ที่ล็อกอิน
+        $borrows = Borrow::with('item', 'user')->where('users_id', auth()->user()->id)->get(); // ตัวอย่างดึงข้อมูลตามผู้ใช้ที่ล็อกอิน
         return view('lending.borrow-detail', compact('borrows'));
-        
     }
-
-    public function destroyBorrow($id)
-{
-    $borrow = Borrow::findOrFail($id);
-    $borrow->delete(); // ลบรายการการยืม
-
-    return redirect()->route('lending.borrow-detail')->with('success', 'ลบรายการยืมสำเร็จ!');
-}
-
 }    
 
 
