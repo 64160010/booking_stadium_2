@@ -92,11 +92,11 @@
 
     form.addEventListener('submit', function(event) {
         const timeSlots = document.getElementsByName('time_slots[]');
-        const timeSlotRegex = /^\d{2}:\d{2}น\.-\d{2}:\d{2}น\.$/; // รูปแบบเวลา
+        const timeSlotRegex = /^\d{2}:\d{2}-\d{2}:\d{2}$/; // รูปแบบเวลา
 
         for (let i = 0; i < timeSlots.length; i++) {
             if (!timeSlotRegex.test(timeSlots[i].value)) {
-                alert('กรุณากรอกช่วงเวลาในรูปแบบ 00:00น.-00:00น.');
+                alert('กรุณากรอกช่วงเวลาในรูปแบบ 00:00-00:00');
                 event.preventDefault(); // หยุดการส่งฟอร์ม
                 return;
             }

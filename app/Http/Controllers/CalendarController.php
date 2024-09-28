@@ -18,5 +18,3 @@ class CalendarController extends Controller
         return view('calendar', compact('year', 'month', 'daysInMonth', 'firstDayOfWeek'));
     }
 }
-
-

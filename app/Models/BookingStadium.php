@@ -13,4 +13,3 @@ class BookingStadium extends Model
 
     protected $fillable = ['booking_date', 'booking_status', 'user_id', 'time_slot_id'];
 }
-

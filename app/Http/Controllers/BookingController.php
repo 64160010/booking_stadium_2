@@ -21,61 +21,58 @@ class BookingController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'date' => 'required|date',
-            'timeSlots' => 'required|array'
-        ]);
+{
+    $validatedData = $request->validate([
+        'date' => 'required|date',
+        'timeSlots' => 'required|array'
+    ]);
 
-        foreach ($validatedData['timeSlots'] as $stadiumId => $timeSlots) {
-            // สร้าง BookingStadium ก่อน เพื่อเก็บสถานะ
+    foreach ($validatedData['timeSlots'] as $stadiumId => $timeSlots) {
+
+        foreach ($timeSlots as $timeSlot) {
+            // Retrieve the time slot data
+            $timeSlotData = \DB::table('time_slot')
+                ->where('time_slot', $timeSlot)
+                ->where('stadium_id', $stadiumId)
+                ->first(['id', 'stadium_id']); 
+
+            if (!$timeSlotData) {
+                return response()->json(['success' => false, 'message' => 'Invalid time or stadium.']);
+            }
+
+            $timeSlotId = $timeSlotData->id;
+            $timeSlotStadiumId = $timeSlotData->stadium_id;
+
+            // Save to booking_stadium and get the ID
             $bookingStadiumId = \DB::table('booking_stadium')->insertGetId([
-                'booking_status' => 'รอการตรวจสอบ',  // เก็บสถานะที่นี่
+                'booking_status' => 'รอการตรวจสอบ',  
                 'booking_date' => $validatedData['date'],
                 'users_id' => auth()->id(),
-                'time_slot_id' => null,  // ต้องเพิ่มข้อมูลนี้ตามโครงสร้างจริง
-                'time_slot_stadium_id' => $stadiumId,
+                'time_slot_id' => $timeSlotId,  
+                'time_slot_stadium_id' => $timeSlotStadiumId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            // สร้าง BookingDetail เพื่อเก็บรายละเอียดการจอง
+            // Create BookingDetail including booking_stadium_id, time_slot_id, and time_slot_stadium_id
             $bookingDetail = BookingDetail::create([
                 'stadium_id' => $stadiumId,
-                'booking_total_hour' => 1, // กำหนดจำนวนชั่วโมงการจอง
-                'booking_total_price' => 100, // กำหนดราคาการจอง
+                'booking_stadium_id' => $bookingStadiumId, // Add the booking stadium ID here
+                'time_slot_id' => $timeSlotId, // Ensure to add time_slot_id
+                'time_slot_stadium_id' => $timeSlotStadiumId, // Add time_slot_stadium_id here
+                'booking_total_hour' => 1, 
+                'booking_total_price' => 100, 
                 'booking_date' => $validatedData['date'],
                 'users_id' => auth()->id(),
             ]);
-
-            foreach ($timeSlots as $timeSlot) {
-                // ดึง ID ของ time slot
-                $timeSlotId = \DB::table('time_slot')
-                    ->where('time_slot', $timeSlot) // ช่วงเวลาที่ส่งมาจากฟอร์ม
-                    ->value('id'); // ดึง ID ของช่วงเวลานั้น
-
-                if (!$timeSlotId) {
-                    return response()->json(['success' => false, 'message' => 'เวลานี้ไม่ถูกต้อง']);
-                }
-
-                // ตรวจสอบการจองซ้ำ
-                $existingBooking = \DB::table('time_slot_has_booking_detail')
-                    ->where('time_slot_id', $timeSlotId)
-                    ->where('booking_detail_id', $bookingDetail->id) // เช็คกับ booking_detail ที่เพิ่งสร้าง
-                    ->exists();
-
-                if ($existingBooking) {
-                    return response()->json(['success' => false, 'message' => 'เวลานี้ถูกจองแล้ว']);
-                }
-
-                // บันทึกความสัมพันธ์ใน time_slot_has_booking_detail
-                \DB::table('time_slot_has_booking_detail')->insert([
-                    'time_slot_id' => $timeSlotId,
-                    'booking_detail_id' => $bookingDetail->id,
-                ]);
-            }
+            
         }
-
-        return response()->json(['success' => true]); 
     }
+
+    return response()->json(['success' => true]); 
+}
+
+
+
+
 }

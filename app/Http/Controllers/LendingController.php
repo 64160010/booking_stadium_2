@@ -7,7 +7,7 @@ use App\Models\Item;
 use App\Models\ItemType;
 use App\Models\Borrow;
 use App\Models\TimeSlot;
-use App\Models\BorrowDetail; // เพิ่มการใช้งาน BorrowDetail
+use App\Models\BorrowDetail; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
