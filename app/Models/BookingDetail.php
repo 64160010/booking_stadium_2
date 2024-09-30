@@ -18,13 +18,15 @@ class BookingDetail extends Model
         'booking_total_price', 
         'booking_status', 
         'booking_date', 
-        'users_id'
+        'users_id',
+        'time_slot_id ',
+        'time_slot_stadium_id ',
     ];
 
     // ความสัมพันธ์กับตาราง Stadium
     public function stadium()
     {
-        return $this->belongsTo(Stadium::class);
+        return $this->belongsTo(Stadium::class, 'stadium_id');
     }
 
     // ความสัมพันธ์กับตาราง BookingStadium
