@@ -13,10 +13,9 @@
                         <div class="mb-4">
                             <label for="booking-date" class="form-label">เลือกวันที่</label>
                             <input type="date" id="booking-date" class="form-control" 
-    onchange="updateBookings()" 
-    min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" 
-    max="{{ \Carbon\Carbon::now()->addDays(7)->format('Y-m-d') }}">
-
+                                onchange="updateBookings()" 
+                                min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" 
+                                max="{{ \Carbon\Carbon::now()->addDays(7)->format('Y-m-d') }}">
                         </div>
 
                         <div class="mb-4 text-start">
@@ -25,7 +24,7 @@
                             <button class="btn btn-md btn-secondary">มีการจองแล้ว</button>
                         </div>
 
-                        <!-- Stadiums Loop -->
+                        <!-- วนลูปสนาม -->
                         @foreach ($stadiums as $stadium)
                         <div class="mb-4">
                             <div class="card border-light">
@@ -62,8 +61,6 @@
                                 </a>
                             @endauth
                         </div>
-                        
-
 
                         <div id="booking-result" class="text-center mt-4"></div>
                     </div>
@@ -76,7 +73,6 @@
 @push('scripts')
 <script>
     let selectedTimeSlots = {};
-    let selectedStadiums = {};
 
     function selectTimeSlot(button, stadiumId) {
         const time = button.getAttribute('data-time');
@@ -95,19 +91,18 @@
     }
 
     function updateBookings() {
-    const date = document.getElementById('booking-date').value;
-    const minDate = new Date('{{ \Carbon\Carbon::now()->format('Y-m-d') }}'); // วันที่ปัจจุบัน
-    const maxDate = new Date('{{ \Carbon\Carbon::now()->addDays(7)->format('Y-m-d') }}'); // 7 วันถัดไป
+        const date = document.getElementById('booking-date').value;
+        const minDate = new Date('{{ \Carbon\Carbon::now()->format('Y-m-d') }}'); // วันที่ปัจจุบัน
+        const maxDate = new Date('{{ \Carbon\Carbon::now()->addDays(7)->format('Y-m-d') }}'); // 7 วันถัดไป
 
-    const selectedDate = new Date(date);
+        const selectedDate = new Date(date);
 
-    // ตรวจสอบว่าวันที่เลือกอยู่ในช่วงที่กำหนด
-    if (date && (selectedDate < minDate || selectedDate > maxDate)) {
-        alert('กรุณาเลือกวันที่ภายใน 7 วันจากปัจจุบัน');
-        document.getElementById('booking-date').value = ''; // รีเซ็ตค่า input
+        // ตรวจสอบว่าวันที่เลือกอยู่ในช่วงที่กำหนด
+        if (date && (selectedDate < minDate || selectedDate > maxDate)) {
+            alert('กรุณาเลือกวันที่ภายใน 7 วันจากปัจจุบัน');
+            document.getElementById('booking-date').value = ''; // รีเซ็ตค่า input
+        }
     }
-}
-
 
     function submitBooking() {
         const date = document.getElementById('booking-date').value;
@@ -120,19 +115,6 @@
 
         if (selectedStadiums.length === 0) {
             alert('กรุณาเลือกสนาม');
-            return;
-        }
-
-        let hasSelectedTime = false;
-        for (let stadiumId of selectedStadiums) {
-            if (selectedTimeSlots[stadiumId].length > 0) {
-                hasSelectedTime = true;
-                break;
-            }
-        }
-
-        if (!hasSelectedTime) {
-            alert('กรุณาเลือกช่วงเวลาที่ต้องการจอง');
             return;
         }
 
@@ -167,7 +149,6 @@
         });
     }
 
-
     function updateSelectedButtons() {
         document.querySelectorAll('.time-slot-button').forEach(button => {
             const stadiumId = button.getAttribute('data-stadium');
@@ -178,7 +159,6 @@
             }
         });
     }
-
 </script>
 @endpush
 @endsection

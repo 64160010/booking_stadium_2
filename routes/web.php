@@ -11,6 +11,8 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\BorrowingController;
 use App\Http\Controllers\StadiumController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\LendingController;
@@ -42,6 +44,12 @@ Route::resource('stadiums', StadiumController::class);
 
 // การจัดการผู้ใช้
 Route::resource('users', UserController::class);
+
+// การจัดการการชำระเงิน
+Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+
+// การจัดการการยืม
+Route::get('/borrowings', [BorrowingController::class, 'index'])->name('borrowings.index');
 
 // เส้นทางที่ต้องการผู้ดูแลระบบ
 Route::group(['middleware' => ['auth', 'is_admin']], function() {
@@ -81,15 +89,13 @@ Route::group(['middleware' => 'auth'], function() {
     Route::post('/booking/store', [BookingController::class, 'store'])->name('booking.store');
 });
 
-
 // เส้นทางสำหรับการแสดงรายละเอียดการยืมอุปกรณ์
 Route::get('/lending/borrow-detail', [LendingController::class, 'borrowDetail'])
     ->name('lending.borrow-detail')
     ->middleware('auth'); // เพิ่ม middleware ถ้าต้องการให้ต้องล็อกอิน
 
-    Route::delete('/lending/borrow/{id}', [LendingController::class, 'destroyBorrow'])->name('lending.destroyBorrow');
+Route::delete('/lending/borrow/{id}', [LendingController::class, 'destroyBorrow'])->name('lending.destroyBorrow');
 
 
-    Route::get('/bookingdetail', [BookingController::class, 'showBookingDetails'])->name('bookingdetail');
 
-    
+

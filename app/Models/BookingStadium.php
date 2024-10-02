@@ -11,5 +11,15 @@ class BookingStadium extends Model
 
     protected $table = 'booking_stadium';
 
-    protected $fillable = ['booking_date', 'booking_status', 'users_id', 'time_slot_stadium_id', 'time_slot_id'];
+    protected $fillable = [
+        'booking_date', 
+        'booking_status', 
+        'users_id'
+    ];
+
+    // ความสัมพันธ์กับตาราง Users
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'users_id');
+    }
 }

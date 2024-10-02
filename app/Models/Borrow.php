@@ -15,27 +15,13 @@ class Borrow extends Model
     protected $fillable = [
         'borrow_date',
         'borrow_status',
-        'item_id',
         'users_id',
-        'time_slot_id',
-        'time_slot_stadium_id',
     ];
 
-    // สัมพันธ์กับตาราง Item
+    // สัมพันธ์กับตาราง Item (ถ้ามีความสัมพันธ์แบบอื่น)
     public function item()
     {
         return $this->belongsTo(Item::class);
-    }
-
-    // สัมพันธ์กับตาราง Stadium
-    public function stadium()
-    {
-        return $this->belongsTo(Stadium::class, 'time_slot_stadium_id');
-    }
-    // สัมพันธ์กับตาราง TimeSlot
-    public function timeSlot()
-    {
-        return $this->belongsTo(TimeSlot::class, 'time_slot_id', 'id');
     }
 
     // สัมพันธ์กับตาราง Users
@@ -46,15 +32,15 @@ class Borrow extends Model
 
     // สัมพันธ์กับตาราง BorrowDetail
     public function details()
-{
-    return $this->hasMany(BorrowDetail::class, 'borrow_id'); 
-}
+    {
+        return $this->hasMany(BorrowDetail::class, 'borrow_id'); 
+    }
 }
 
 class BorrowDetail extends Model
 {
     use HasFactory;
-    public $timestamps = false;
+    public $timestamps = false; // ไม่มี timestamp ในฐานข้อมูล
 
     protected $table = 'borrow_detail';
     protected $guarded = [];
@@ -74,15 +60,15 @@ class BorrowDetail extends Model
 
     // สัมพันธ์กับตาราง Item
     public function item()
-{
-    return $this->belongsTo(Item::class);
-}
+    {
+        return $this->belongsTo(Item::class);
+    }
 
     // สัมพันธ์กับตาราง Borrow
     public function borrow()
-{
-    return $this->belongsTo(Borrow::class);
-}
+    {
+        return $this->belongsTo(Borrow::class);
+    }
 
     // สัมพันธ์กับตาราง TimeSlot
     public function timeSlot()
