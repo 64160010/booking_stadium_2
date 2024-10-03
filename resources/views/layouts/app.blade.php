@@ -55,8 +55,20 @@
                                 <i class="fas fa-calendar-alt me-1"></i> {{ __('จองสนาม') }}
                             </a>
                         </li>
-
-
+                        <li class="nav-item">
+                            @if(isset($bookingStadiumId))
+                                <a class="nav-link" href="{{ route('booking.detail', ['id' => $bookingStadiumId]) }}">
+                                    <i class="fas fa-calendar-alt me-1"></i> {{ __('รายละเอียดการจองสนาม') }}
+                                </a>
+                            @else
+                                <span class="nav-link disabled">
+                                    <i class="fas fa-calendar-alt me-1"></i> {{ __('รายละเอียดการจองสนาม') }}
+                                </span>
+                            @endif
+                        </li>
+                        
+                        
+                      
                         
 
 

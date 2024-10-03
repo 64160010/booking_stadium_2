@@ -212,4 +212,12 @@ class LendingController extends Controller
 
         return redirect()->route('lending.borrow-detail')->with('success', 'ลบรายการยืมสำเร็จ!');
     }
+    public function showBookingDetail($id)
+    {
+        // ดึงข้อมูลการจองจากฐานข้อมูล
+        $bookingDetail = BookingDetail::findOrFail($id); 
+        
+        // ส่งข้อมูลไปยัง view booking_detail
+        return view('booking_detail', compact('bookingDetail'));
+    }
 }

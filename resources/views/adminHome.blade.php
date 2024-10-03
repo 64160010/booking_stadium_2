@@ -17,23 +17,23 @@
 
                     <div class="row">
                         @foreach ([
-    ['info', 'การจัดการสมาชิก', 'เพิ่ม ลบ และแก้ไขข้อมูลสมาชิก', route('users.index'), 'จัดการสมาชิก'],
-    ['success', 'การจองสนาม', 'ดูและจัดการการจองสนามทั้งหมด', route('stadiums.index'), 'จัดการการจอง'],
-    ['warning', 'สถานะการชำระเงิน', 'ตรวจสอบและอัพเดตสถานะการชำระเงิน', route('home'), 'จัดการสถานะ'],
-    ['danger', 'การยืมอุปกรณ์', 'ตรวจสอบและจัดการการยืมอุปกรณ์', route('lending.index'), 'จัดการการยืม'],
-] as [$color, $title, $text, $link, $buttonText])
-    <div class="col-md-6 mb-3">
-        <div class="card text-white bg-{{ $color }} shadow-sm">
-            <div class="card-body d-flex flex-column justify-content-between">
-                <h5 class="card-title">{{ $title }}</h5>
-                <p class="card-text">{{ $text }}</p>
-                <a href="{{ $link }}" class="btn btn-light align-self-end">{{ $buttonText }}</a>
-            </div>
-        </div>
-    </div>
-@endforeach
-
+                            ['info', 'การจัดการสมาชิก', 'เพิ่ม ลบ และแก้ไขข้อมูลสมาชิก', route('users.index'), 'จัดการสมาชิก'],
+                            ['success', 'การจองสนาม', 'ดูและจัดการการจองสนามทั้งหมด', route('stadiums.index'), 'จัดการการจอง'],
+                            ['warning', 'สถานะการชำระเงิน', 'ตรวจสอบและอัพเดตสถานะการชำระเงิน', route('home'), 'จัดการสถานะ'],
+                            ['danger', 'การยืมอุปกรณ์', 'ตรวจสอบและจัดการการยืมอุปกรณ์', route('lending.index'), 'จัดการการยืม'],
+                        ] as [$color, $title, $text, $link, $buttonText])
+                            <div class="col-md-3 mb-3">
+                                <div class="card text-white bg-{{ $color }} shadow-sm">
+                                    <div class="card-body d-flex flex-column justify-content-between">
+                                        <h5 class="card-title">{{ $title }}</h5>
+                                        <p class="card-text">{{ $text }}</p>
+                                        <a href="{{ $link }}" class="btn btn-light align-self-end">{{ $buttonText }}</a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
+                    
   
                     <hr class="my-3">
 

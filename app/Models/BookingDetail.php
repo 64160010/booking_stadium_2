@@ -27,6 +27,7 @@ class BookingDetail extends Model
     {
         return $this->belongsTo(Stadium::class, 'stadium_id');
     }
+    
 
     // ความสัมพันธ์กับตาราง BookingStadium
     public function bookingStadium()
