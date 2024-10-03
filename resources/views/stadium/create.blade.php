@@ -46,12 +46,15 @@
                             <label for="time_slots" class="form-label">ช่วงเวลา</label>
                             <div id="time-slots-container">
                                 <div class="input-group mb-2">
-                                    <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00น.-12:00น." required>
+                                    <input type="time" class="form-control" name="start_time[]" required>
+                                    <span class="input-group-text">ถึง</span>
+                                    <input type="time" class="form-control" name="end_time[]" required>
                                     <button type="button" class="btn btn-outline-danger remove-time-slot" aria-label="ลบช่วงเวลา">ลบ</button>
                                 </div>
                             </div>
                             <button type="button" class="btn btn-outline-success" id="add-time-slot">เพิ่มช่วงเวลา</button>
                         </div>
+                        
 
                         <button type="submit" class="btn btn-primary">เพิ่มสนาม</button>
                         <a href="{{ route('stadiums.index') }}" class="btn btn-secondary">ยกเลิก</a>
@@ -73,7 +76,7 @@
         const div = document.createElement('div');
         div.classList.add('input-group', 'mb-2');
         div.innerHTML = `
-            <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00น.-12:00น." required>
+            <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00-12:00" required>
             <button type="button" class="btn btn-outline-danger remove-time-slot" aria-label="ลบช่วงเวลา">ลบ</button>
         `;
         container.appendChild(div);
@@ -91,17 +94,21 @@
     });
 
     form.addEventListener('submit', function(event) {
-        const timeSlots = document.getElementsByName('time_slots[]');
-        const timeSlotRegex = /^\d{2}:\d{2}-\d{2}:\d{2}$/; // รูปแบบเวลา
+    const startTimes = document.getElementsByName('start_time[]');
+    const endTimes = document.getElementsByName('end_time[]');
 
-        for (let i = 0; i < timeSlots.length; i++) {
-            if (!timeSlotRegex.test(timeSlots[i].value)) {
-                alert('กรุณากรอกช่วงเวลาในรูปแบบ 00:00-00:00');
-                event.preventDefault(); // หยุดการส่งฟอร์ม
-                return;
-            }
+    for (let i = 0; i < startTimes.length; i++) {
+        const startTime = startTimes[i].value;
+        const endTime = endTimes[i].value;
+
+        if (startTime >= endTime) {
+            alert('กรุณากรอกเวลาที่ถูกต้อง: เวลาเริ่มต้องมาก่อนเวลาสิ้นสุด');
+            event.preventDefault(); // หยุดการส่งฟอร์ม
+            return;
         }
-    });
+    }
+});
+
 });
 </script>
 @endpush

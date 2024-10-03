@@ -9,7 +9,7 @@
                     <h4>{{ __('แก้ไขข้อมูลสนาม') }}</h4>
                 </div>
                 <div class="card-body p-3">
-                    <form action="{{ route('stadiums.update', $stadium->id) }}" method="POST">
+                    <form action="{{ route('stadiums.update', $stadium->id) }}" method="POST" id="stadium-form">
                         @csrf
                         @method('PUT')
                         <div class="mb-3">
@@ -48,7 +48,9 @@
                             <div id="time-slots-container">
                                 @foreach ($time_slots as $timeSlot)
                                     <div class="input-group mb-2">
-                                        <input type="text" class="form-control" name="time_slots[]" value="{{ $timeSlot->time_slot }}" required>
+                                        <input type="time" class="form-control" name="start_time[]" value="{{ explode('-', $timeSlot->time_slot)[0] }}" required>
+                                        <span class="input-group-text">ถึง</span>
+                                        <input type="time" class="form-control" name="end_time[]" value="{{ explode('-', $timeSlot->time_slot)[1] }}" required>
                                         <button type="button" class="btn btn-outline-danger remove-time-slot">ลบ</button>
                                     </div>
                                 @endforeach
@@ -69,42 +71,18 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+   document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('time-slots-container');
         const addButton = document.getElementById('add-time-slot');
-
-        // ฟังก์ชันสำหรับตรวจสอบรูปแบบเวลา
-        function validateTimeFormat(time) {
-            const timeFormat = /^\d{2}:\d{2}\s*-\s*\d{2}:\d{2}$/; // รูปแบบ 00:00-00:00
-            return timeFormat.test(time);
-        }
-
-        // เพิ่มการตรวจสอบก่อนส่งฟอร์ม
-        const form = container.closest('form');
-        form.addEventListener('submit', function(event) {
-            const timeSlots = document.querySelectorAll('input[name="time_slots[]"]');
-            let valid = true;
-
-            timeSlots.forEach(function(slot) {
-                if (!validateTimeFormat(slot.value)) {
-                    valid = false;
-                    slot.classList.add('is-invalid'); // เพิ่มคลาสสำหรับแสดงความผิดพลาด
-                } else {
-                    slot.classList.remove('is-invalid'); // ลบคลาสถ้าถูกต้อง
-                }
-            });
-
-            if (!valid) {
-                event.preventDefault(); // ยกเลิกการส่งฟอร์ม
-                alert('กรุณากรอกช่วงเวลาในรูปแบบ 00:00-00:00'); // แจ้งเตือนข้อผิดพลาด
-            }
-        });
+        const form = document.getElementById('stadium-form');
 
         addButton.addEventListener('click', function() {
             const div = document.createElement('div');
             div.classList.add('input-group', 'mb-2');
             div.innerHTML = `
-                <input type="text" class="form-control" name="time_slots[]" placeholder="เวลา เช่น 11:00น.-12:00น." required>
+                <input type="time" class="form-control" name="start_time[]" required>
+                <span class="input-group-text">ถึง</span>
+                <input type="time" class="form-control" name="end_time[]" required>
                 <button type="button" class="btn btn-outline-danger remove-time-slot">ลบ</button>
             `;
             container.appendChild(div);
@@ -112,7 +90,27 @@
 
         container.addEventListener('click', function(event) {
             if (event.target.classList.contains('remove-time-slot')) {
-                event.target.parentElement.remove();
+                if (container.children.length > 1) {
+                    event.target.parentElement.remove();
+                } else {
+                    alert('ต้องมีช่วงเวลาอย่างน้อยหนึ่งช่วง');
+                }
+            }
+        });
+
+        form.addEventListener('submit', function(event) {
+            const startTimes = document.getElementsByName('start_time[]');
+            const endTimes = document.getElementsByName('end_time[]');
+
+            for (let i = 0; i < startTimes.length; i++) {
+                const startTime = startTimes[i].value;
+                const endTime = endTimes[i].value;
+
+                if (startTime >= endTime) {
+                    alert('กรุณากรอกเวลาที่ถูกต้อง: เวลาเริ่มต้องมาก่อนเวลาสิ้นสุด');
+                    event.preventDefault();
+                    return;
+                }
             }
         });
     });
