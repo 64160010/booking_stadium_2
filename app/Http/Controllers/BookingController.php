@@ -93,20 +93,20 @@ class BookingController extends Controller
         }
     }
 
-    public function show($bookingStadiumId)
+    public function show()
 {
-    // ดึงข้อมูลจาก booking_detail ที่เชื่อมกับ booking_stadium_id
-    $bookingDetails = BookingDetail::with(['stadium', 'timeSlot'])
-        ->where('booking_stadium_id', $bookingStadiumId) // ใช้ $bookingStadiumId แทน $id
-        ->get();
+    // ดึงข้อมูลการจองของผู้ใช้ที่ล็อกอินอยู่
+    $userId = auth()->id(); // รับ ID ของผู้ใช้ที่ล็อกอิน
+    $bookingDetails = BookingDetail::where('users_id', $userId)->get();
+    
+    // กำหนดข้อความเมื่อไม่มีข้อมูลการจอง
+    $message = $bookingDetails->isEmpty() ? 'ไม่มีรายการจอง' : null;
 
-    // ตรวจสอบข้อมูลที่ดึงมา
-    if ($bookingDetails->isEmpty()) {
-        return redirect()->back()->with('error', 'ไม่พบข้อมูลการจอง');
-    }
-
-    return view('bookingDetail', compact('bookingDetails')); // ใช้ $bookingDetails แทน $bookingDetail
+    return view('bookingDetail', compact('bookingDetails', 'message'));
 }
+
+
+
 public function destroy($id)
 {
     // ค้นหาข้อมูลการจอง

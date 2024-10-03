@@ -11,7 +11,13 @@
             </div>
         @endif
 
-        @if ($bookingDetails->isNotEmpty())
+        <!-- ถ้ามีข้อความแจ้งเตือน ไม่มีข้อมูลการจอง -->
+        @if(isset($message))
+            <div class="alert alert-info">
+                {{ $message }}
+            </div>
+        @elseif ($bookingDetails->isNotEmpty())
+        <!-- ถ้ามีข้อมูลการจอง -->
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -58,6 +64,7 @@
     </div>
 </main>
 
+<!-- JavaScript ส่วนจัดการลบข้อมูลแบบ AJAX -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
