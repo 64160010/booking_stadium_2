@@ -3,6 +3,7 @@
 @section('content')
 <main class="py-4">
     <div class="container">
+        <h1>รหัสการจอง 001</h1>
         <h1 class="mb-4">รายละเอียดการจอง</h1>
 
         @if (session('success'))
@@ -29,6 +30,7 @@
                     <th>เวลา</th>
                     <th>ราคา</th>
                     <th>ชั่วโมง</th>
+                    <th>สถานะ</th>
                     <th>ลบ</th>
                 </tr>
             </thead>
@@ -43,6 +45,7 @@
                     <td>{{ $detail->timeSlot->time_slot }}</td>
                     <td>{{ number_format($detail->booking_total_price) }} บาท</td>
                     <td>{{ $detail->booking_total_hour }}</td>
+                    <td>{{ $detail->booking_status }}</td>
                     <td>
                         <button class="btn btn-outline-secondary delete-booking" data-id="{{ $detail->id }}">ลบ</button>
                     </td>
@@ -62,15 +65,49 @@
             <p>ไม่พบข้อมูลการจอง</p>
         @endif
 
+        <!-- แสดงรายละเอียดการยืมด้านล่าง -->
+        @if ($borrowingDetails->isNotEmpty())
+            <h2 class="mt-5">รายละเอียดการยืมอุปกรณ์</h2>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>รหัสการยืม</th>
+                        <th>ชื่ออุปกรณ์</th>
+                        <th>วันที่ยืม</th>
+                        <th>เวลา</th>
+                        <th>จำนวน</th>
+                        <th>ราคา</th>
+                        <th>สถานะ</th>
+                        <th>ลบ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($borrowingDetails as $borrow)
+                    <tr id="borrow-row-{{ $borrow->id }}">
+                        <td>{{ $borrow->id }}</td>
+                        <td>{{ $borrow->item_name }}</td>
+                        <td>{{ $borrow->borrow_date }}</td>
+                        <td>{{ $borrow->time_slot }}</td>
+                        <td>{{ $borrow->quantity }}</td>
+                        <td>{{ number_format($borrow->price) }} บาท</td>
+                        <td>{{ $borrow->borrow_status }}</td>
+                        <td>
+                            <button class="btn btn-outline-secondary delete-borrow" data-id="{{ $borrow->id }}">ลบ</button>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @else
+            <p>ยังไม่มีการยืมอุปกรณ์</p>
+        @endif
 
         <!-- เงื่อนไขสำหรับปุ่มยืมอุปกรณ์ -->
        @if ($bookingDetails->isNotEmpty())
-    <button class="btn btn-outline-secondary me-2" onclick="window.location='{{ route('lending.index', ['booking_stadium_id' => $bookingDetails[0]->booking_stadium_id]) }}'">ยืมอุปกรณ์</button>
-@else
-   
-    <p>คุณต้องจองสนามก่อนนะ ถึงจะสามารถยืมอุปกรณ์ได้</p>
-@endif
-
+        <button class="btn btn-outline-secondary me-2" onclick="window.location='{{ route('lending.index', ['booking_stadium_id' => $bookingDetails[0]->booking_stadium_id]) }}'">ยืมอุปกรณ์</button>
+        @else
+        <p>คุณต้องจองสนามก่อนนะ ถึงจะสามารถยืมอุปกรณ์ได้</p>
+       @endif
 
     </div>
 </main>
@@ -79,24 +116,46 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
-        // เมื่อคลิกปุ่มลบ
+        // เมื่อคลิกปุ่มลบการจอง
         $('.delete-booking').on('click', function(e) {
             e.preventDefault();
-
             var bookingId = $(this).data('id');
             var row = $('#booking-row-' + bookingId);
 
             if (confirm('คุณแน่ใจที่จะลบรายการนี้?')) {
                 $.ajax({
-                    url: '/booking/' + bookingId, // เส้นทางสำหรับลบ
+                    url: '/booking/' + bookingId,
                     type: 'DELETE',
                     data: {
-                        _token: '{{ csrf_token() }}' // รวม token CSRF
+                        _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
-                        // ลบแถวออกจากตารางเมื่อสำเร็จ
                         row.remove();
                         alert('ลบรายการจองสำเร็จ');
+                    },
+                    error: function(xhr) {
+                        alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+                    }
+                });
+            }
+        });
+
+        // เมื่อคลิกปุ่มลบการยืม
+        $('.delete-borrow').on('click', function(e) {
+            e.preventDefault();
+            var borrowId = $(this).data('id');
+            var row = $('#borrow-row-' + borrowId);
+
+            if (confirm('คุณแน่ใจที่จะลบรายการนี้?')) {
+                $.ajax({
+                    url: '/lending/borrow/' + borrowId, // เส้นทางสำหรับลบการยืม
+                    type: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        row.remove();
+                        alert('ลบรายการยืมสำเร็จ');
                     },
                     error: function(xhr) {
                         alert('เกิดข้อผิดพลาดในการลบข้อมูล');
