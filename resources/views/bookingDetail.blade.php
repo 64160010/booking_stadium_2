@@ -54,7 +54,7 @@
         <div class="d-flex justify-content-between mt-3">
             <button class="btn btn-outline-secondary" onclick="window.location='{{ route('booking') }}'">ย้อนกลับ</button>
             <div>
-                
+                <button class="btn btn-outline-secondary me-2" onclick="window.location='{{ route('lending.index') }}'">ยืมอุปกรณ์</button>
                 <button class="btn btn-success">ยืนยันการจอง</button>
             </div>
         </div>

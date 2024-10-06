@@ -40,6 +40,7 @@
                                 @csrf
                                 <input type="hidden" name="item_id" value="{{ $item->id }}">
                                 <input type="hidden" name="borrow_date" value="{{ $borrow_date }}">
+                                <input type="hidden" name="booking_stadium_id" value="{{ $booking_stadium_id }}">
                                 {{-- <input type="hidden" name="stadium_id" value="{{ $stadium_id }}"> --}}
 
                                 <!-- ข้อมูลอุปกรณ์ -->

@@ -27,14 +27,14 @@
                 @foreach ($borrows as $borrow)
                     <tr>
                         <td>{{ $borrow->id }}</td>
-                        <td>{{ $borrow->item->item_code ?? 'ไม่มีข้อมูล' }}</td> <!-- แสดงรหัสอุปกรณ์ -->
-                        <td>{{ $borrow->item->item_name ?? 'ไม่มีข้อมูล' }}</td>
+                        <td>{{ $borrow->item->item_code }}</td> <!-- แสดงรหัสอุปกรณ์ -->
+                        <td>{{ $borrow->item->item_name }}</td>
                         <td>{{ $borrow->timeSlot->stadium->stadium_name ?? 'ไม่มีข้อมูลสนาม' }}</td> <!-- แสดงชื่อสนาม -->
                         <td>{{ $borrow->borrow_date }}</td>
                         <td>
-                            @if ($borrow->details->isNotEmpty()) <!-- ตรวจสอบว่ามีรายละเอียดการยืมหรือไม่ -->
-                                @foreach ($borrow->details as $detail)
-                                    {{ $detail->borrow_quantity }} <!-- แสดงจำนวนการยืม -->
+                            @if ($borrow->Details)
+                                @foreach ($borrow->Details as $detail)
+                                    {{ $detail->borrow_quantity }}
                                 @endforeach
                             @else
                                 ไม่มีข้อมูลการยืม
