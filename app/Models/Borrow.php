@@ -68,7 +68,7 @@ class BorrowDetail extends Model
     // สัมพันธ์กับตาราง Borrow
     public function borrow()
     {
-        return $this->belongsTo(Borrow::class);
+        return $this->belongsTo(Borrow::class, 'borrow_id');
     }
 
     // สัมพันธ์กับตาราง TimeSlot

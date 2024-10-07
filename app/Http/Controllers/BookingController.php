@@ -95,20 +95,20 @@ class BookingController extends Controller
     }
 
     public function show($booking_stadium_id)
-    {
-        // ดึงข้อมูลการจองของผู้ใช้ที่ล็อกอินอยู่
-        $userId = auth()->id(); // รับ ID ของผู้ใช้ที่ล็อกอิน
-        $bookingDetails = BookingDetail::where('users_id', $userId)->get();
-        
-        // ดึงรายละเอียดการยืมตาม booking_stadium_id
-        $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
-    
-        // กำหนดข้อความเมื่อไม่มีข้อมูลการจอง
-        $message = $bookingDetails->isEmpty() ? 'ไม่มีรายการจอง' : null;
-    
-        return view('bookingDetail', compact('bookingDetails', 'borrowingDetails', 'message'));
-    }
-    
+{
+    // ดึงข้อมูลการจองของผู้ใช้ที่ล็อกอินอยู่
+    $userId = auth()->id();
+    $bookingDetails = BookingDetail::where('users_id', $userId)->get();
+
+    // ดึงรายละเอียดการยืมตาม booking_stadium_id และรวมรายละเอียดจาก BorrowDetail
+    $borrowingDetails = Borrow::with('details')->where('booking_stadium_id', $booking_stadium_id)->get();
+
+    // กำหนดข้อความเมื่อไม่มีข้อมูลการจอง
+    $message = $bookingDetails->isEmpty() ? 'ไม่มีรายการจอง' : null;
+
+    return view('bookingDetail', compact('bookingDetails', 'borrowingDetails', 'message'));
+}
+
 
 
 
