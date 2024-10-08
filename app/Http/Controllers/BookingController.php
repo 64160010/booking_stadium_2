@@ -101,9 +101,21 @@ class BookingController extends Controller
     $bookingDetails = BookingDetail::where('users_id', $userId)
                                     ->where('booking_stadium_id', $booking_stadium_id)
                                     ->get();
-    
-    // ดึงวันที่จาก booking_details
-    $availableDates = $bookingDetails->pluck('booking_date')->unique();
+
+    // รวมข้อมูลตามสนามและวันที่
+    $groupedBookingDetails = $bookingDetails->groupBy(function ($item) {
+        return $item->stadium_id . '|' . $item->booking_date; // รวมตาม stadium_id และ booking_date
+    })->map(function ($group) {
+        // รวมช่วงเวลาในแต่ละกลุ่ม
+        $timeSlots = $group->pluck('timeSlot.time_slot')->join(', ');
+        return [
+            'stadium_name' => $group->first()->stadium->stadium_name,
+            'booking_date' => $group->first()->booking_date,
+            'time_slots' => $timeSlots,
+            'total_price' => $group->sum('booking_total_price'),
+            'total_hours' => $group->sum('booking_total_hour'),
+        ];
+    })->values();
 
     // ดึงรายละเอียดการยืมตาม booking_stadium_id
     $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
@@ -111,9 +123,11 @@ class BookingController extends Controller
     // กำหนดข้อความเมื่อไม่มีข้อมูลการจอง
     $message = $bookingDetails->isEmpty() ? 'ไม่มีรายการจอง' : null;
 
-    return view('bookingDetail', compact('bookingDetails', 'borrowingDetails', 'availableDates', 'message'));
-    
+    return view('bookingDetail', compact('groupedBookingDetails', 'borrowingDetails', 'message', 'bookingDetails'));
 }
+
+    
+
 // ฟังก์ชันนี้ใช้เพื่อส่งค่าที่ดึงมาจากการยืมไปยัง borrow-item
 public function showBorrowItem($booking_stadium_id)
 {

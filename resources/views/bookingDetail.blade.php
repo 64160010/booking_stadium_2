@@ -17,42 +17,37 @@
             <div class="alert alert-info">
                 {{ $message }}
             </div>
-        @elseif ($bookingDetails->isNotEmpty())
-        <!-- ถ้ามีข้อมูลการจอง -->
-        <table class="table table-bordered table-striped">
-            <thead class="table-light">
-                <tr>
-                    <th>รหัสการจอง</th>
-                    <th>ชื่อจริง</th>
-                    <th>เบอร์โทรศัพท์</th>
-                    <th>สนาม</th>
-                    <th>วันที่จอง</th>
-                    <th>เวลา</th>
-                    <th>ราคา</th>
-                    <th>ชั่วโมง</th>
-                    <th>สถานะ</th>
-                    <th>ลบ</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($bookingDetails as $detail)
-                <tr id="booking-row-{{ $detail->id }}">
-                    <td>{{ $detail->id }}</td>
-                    <td>{{ $detail->user->fname }}</td>
-                    <td>{{ $detail->user->phone }}</td>
-                    <td>{{ $detail->stadium->stadium_name }}</td>
-                    <td>{{ $detail->booking_date }}</td>
-                    <td>{{ $detail->timeSlot->time_slot }}</td>
-                    <td>{{ number_format($detail->booking_total_price) }} บาท</td>
-                    <td>{{ $detail->booking_total_hour }}</td>
-                    <td>{{ $detail->booking_status }}</td>
-                    <td>
-                        <button class="btn btn-outline-danger delete-booking" data-id="{{ $detail->id }}">ลบ</button>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+            @elseif ($groupedBookingDetails->isNotEmpty())
+            <!-- ถ้ามีข้อมูลการจอง -->
+            <table class="table table-bordered table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>สนาม</th>
+                        <th>วันที่จอง</th>
+                        <th>เวลา</th>
+                        <th>ราคา</th>
+                        <th>ชั่วโมง</th>
+                        <th>สถานะ</th>
+                        <th>ลบ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($groupedBookingDetails as $group)
+                    <tr>
+                        <td>{{ $group['stadium_name'] }}</td>
+                        <td>{{ $group['booking_date'] }}</td>
+                        <td>{{ $group['time_slots'] }}</td>
+                        <td>{{ number_format($group['total_price']) }} บาท</td>
+                        <td>{{ $group['total_hours'] }}</td>
+                        <td><!-- สถานะที่คุณต้องการแสดง --></td>
+                        <td>
+                            {{-- <button class="btn btn-outline-danger delete-booking" data-id="{{ $detail->id }}">ลบ</button> --}}
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        
 
         @else
             <p>ไม่พบข้อมูลการจอง</p>
