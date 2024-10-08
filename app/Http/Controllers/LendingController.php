@@ -8,6 +8,7 @@ use App\Models\ItemType;
 use App\Models\Borrow;
 use App\Models\TimeSlot;
 use App\Models\BorrowDetail; 
+use App\Models\BookingDetail; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -127,10 +128,26 @@ class LendingController extends Controller
         $stadiums = Stadium::with('timeSlots')->get();
         $borrow_date = now()->format('Y-m-d'); // กำหนดวันที่ยืมเป็นวันที่ปัจจุบัน
 
+        $availableDates = [];
+
+        // สมมติว่าคุณต้องการอนุญาตให้ยืมสำหรับ 10 วันถัดไป
+    // for ($i = 0; $i < 10; $i++) {
+    //     $availableDates[] = now()->addDays($i)->toDateString(); // ดึงวันที่ที่สามารถยืมได้
+    // }
+
         // ตรวจสอบว่า booking_stadium_id ถูกกำหนดหรือไม่
     $booking_stadium_id = session('booking_stadium_id');
 
-        return view('lending.borrow-item', compact('item', 'stadiums', 'borrow_date' , 'booking_stadium_id'));
+    if ($booking_stadium_id) {
+        $bookingDetails = BookingDetail::where('booking_stadium_id', $booking_stadium_id)->get();
+
+        // รวมวันที่จาก booking_detail
+        foreach ($bookingDetails as $detail) {
+            $availableDates[] = $detail->booking_date; // เพิ่มวันที่จองสนามลงใน availableDates
+        }
+    }
+
+        return view('lending.borrow-item', compact('item', 'stadiums', 'borrow_date' , 'booking_stadium_id','availableDates'));
     }
 
     // เก็บข้อมูลการยืม

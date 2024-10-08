@@ -97,18 +97,39 @@ class BookingController extends Controller
     public function show($booking_stadium_id)
 {
     // ดึงข้อมูลการจองของผู้ใช้ที่ล็อกอินอยู่
-    $userId = auth()->id();
-    $bookingDetails = BookingDetail::where('users_id', $userId)->get();
+    $userId = auth()->id(); // รับ ID ของผู้ใช้ที่ล็อกอิน
+    $bookingDetails = BookingDetail::where('users_id', $userId)
+                                    ->where('booking_stadium_id', $booking_stadium_id)
+                                    ->get();
+    
+    // ดึงวันที่จาก booking_details
+    $availableDates = $bookingDetails->pluck('booking_date')->unique();
 
-    // ดึงรายละเอียดการยืมตาม booking_stadium_id และรวมรายละเอียดจาก BorrowDetail
-    $borrowingDetails = Borrow::with('details')->where('booking_stadium_id', $booking_stadium_id)->get();
+    // ดึงรายละเอียดการยืมตาม booking_stadium_id
+    $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
 
     // กำหนดข้อความเมื่อไม่มีข้อมูลการจอง
     $message = $bookingDetails->isEmpty() ? 'ไม่มีรายการจอง' : null;
 
-    return view('bookingDetail', compact('bookingDetails', 'borrowingDetails', 'message'));
+    return view('bookingDetail', compact('bookingDetails', 'borrowingDetails', 'availableDates', 'message'));
+    
 }
+// ฟังก์ชันนี้ใช้เพื่อส่งค่าที่ดึงมาจากการยืมไปยัง borrow-item
+public function showBorrowItem($booking_stadium_id)
+{
+    // ดึงรายละเอียดการยืมตาม booking_stadium_id
+    $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
+    
+    // ดึงวันที่จาก borrowingDetails
+    $availableBorrowDates = $borrowingDetails->pluck('borrow_date')->unique(); // สมมติว่าคุณมีฟิลด์ borrow_date
 
+    // กำหนดข้อความเมื่อไม่มีข้อมูลการยืม
+    $borrowMessage = $borrowingDetails->isEmpty() ? 'ไม่มีรายการยืม' : null;
+
+    // ส่งค่าผ่านมุมมอง borrow-item
+    return view('borrow-item', compact('availableBorrowDates', 'borrowingDetails', 'borrowMessage'));
+}
+    
 
 
 

@@ -8,7 +8,6 @@
     </div>
 @endif
 
-
 @section('content')
     <div class="container-fluid mt-4">
         <div class="row justify-content-center">
@@ -29,42 +28,7 @@
                         @endif
                     @endauth
 
-
                     <div class="table-responsive">
-                        <!-- ฟอร์มเลือกวันที่ -->
-                        @guest
-                            <div class="mb-4">
-                                <label for="borrow-date" class="form-label"
-                                    style="margin-top:10px; margin-left:10px">เลือกวันที่ที่ต้องการยืม</label>
-                                <div class="input-group" style="width: 250px; margin-top:-10px">
-                                    <input type="text" id="borrow-date" class="form-control" style="margin-left:10px"
-                                        placeholder="วัน/เดือน/ปี">
-                                    <span class="input-group-text bg-primary text-white">
-                                        <i class="fa fa-calendar"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        @endguest
-
-                        @auth
-                            @if (!Auth::user()->is_admin)
-                                <div class="mb-4">
-                                    <label for="borrow-date" class="form-label"
-                                        style="margin-top:10px; margin-left:10px">เลือกวันที่ที่ต้องการยืม</label>
-                                    <div class="input-group" style="width: 250px; margin-top:-10px">
-                                        <input type="text" id="borrow-date" class="form-control" style="margin-left:10px"
-                                            placeholder="วัน/เดือน/ปี">
-                                        <span class="input-group-text bg-primary text-white">
-                                            <i class="fa fa-calendar"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            @endif
-                        @endauth
-
-
-
-
                         <table class="table table-bordered">
                             <thead class="bg-primary text-white">
                                 <tr>
@@ -102,9 +66,8 @@
                                         <td>
                                             @auth
                                                 @if (!Auth::user()->is_admin)
-                                                    <a href="{{ route('borrow-item', ['item_id' => $item->id, 'date' => request('date')]) }}"
-                                                        class="btn btn-primary"
-                                                        onclick="setBorrowDate(event, {{ $item->id }})">
+                                                    <a href="{{ route('borrow-item', ['item_id' => $item->id]) }}"
+                                                        class="btn btn-primary">
                                                         {{ __('ยืม') }}
                                                     </a>
                                                 @endif
@@ -197,72 +160,20 @@
                 box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
             }
         </style>
+    @endpush
 
+    @push('scripts')
+        <!-- โหลด jQuery -->
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
-
-
-
-        @push('scripts')
-            <!-- โหลด jQuery -->
-            <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-            <link rel="stylesheet"
-                href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-
-            <!-- โหลด Bootstrap Datepicker -->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-
-            <!-- โหลดภาษาไทยสำหรับ Datepicker -->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.th.min.js">
-            </script>
-
-
-            <script>
-                $(document).ready(function() {
-                    $('#borrow-date').datepicker({
-                        format: 'dd/mm/yyyy', // ฟอร์แมตวันที่เป็นวัน/เดือน/ปี
-                        language: 'th', // กำหนดภาษาไทย
-                        todayHighlight: true, // ไฮไลต์วันที่ปัจจุบัน
-                        autoclose: true, // ปิด Datepicker อัตโนมัติเมื่อเลือกวันที่
-                        thaiyear: true, // เปิดใช้งานปีพุทธศักราช
-                        startDate: "{{ \Carbon\Carbon::now()->format('d/m/Y') }}", // วันที่เริ่มต้น (ปัจจุบัน)
-                        endDate: "{{ \Carbon\Carbon::now()->addDays(7)->format('d/m/Y') }}" // กำหนดให้เลือกได้แค่ 7 วันจากปัจจุบัน
-                    });
-
-                    // ให้ไอคอนทำการเปิด Datepicker เมื่อคลิก
-                    $('.input-group-text').click(function() {
-                        $('#borrow-date').focus();
-                    });
-                });
-
-
-
-                // ฟังก์ชันสำหรับซ่อนข้อความแจ้งเตือนหลังจาก 5 วินาที
-                setTimeout(function() {
-                    const alert = document.getElementById('success-alert');
-                    if (alert) {
-                        alert.style.display = 'none'; // ซ่อนข้อความแจ้งเตือน
-                    }
-                }, 5000); // 5000 milliseconds = 5 seconds
-
-                function setBorrowDate(event, itemId) {
-                    event.preventDefault();
-                    const date = document.getElementById('borrow-date').value;
-                    if (!date) {
-                        alert('กรุณาเลือกวันที่ก่อนทำการยืม');
-                        return;
-                    }
-
-                    // แปลงวันที่จากรูปแบบ dd/mm/yyyy เป็น yyyy-mm-dd
-                    const dateParts = date.split('/');
-                    const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-
-                    const routeUrl = @json(route('borrow-item', ['item_id' => ':itemId', 'date' => ':date']));
-                    const finalUrl = routeUrl.replace(':itemId', itemId).replace(':date', formattedDate);
-
-                    window.location.href = finalUrl;
+        <script>
+            // ฟังก์ชันสำหรับซ่อนข้อความแจ้งเตือนหลังจาก 5 วินาที
+            setTimeout(function() {
+                const alert = document.getElementById('success-alert');
+                if (alert) {
+                    alert.style.display = 'none'; // ซ่อนข้อความแจ้งเตือน
                 }
-            </script>
-        @endpush
+            }, 5000); // 5000 milliseconds = 5 seconds
+        </script>
     @endpush
 @endsection

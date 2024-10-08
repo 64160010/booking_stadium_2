@@ -2,7 +2,7 @@
 
 @section('title', 'ยืมอุปกรณ์')
 
-<!-- แสดงข้อความแจ้งเตือน -->
+<!-- แสดงข้อความสำเร็จและข้อความผิดพลาด -->
 @if (session('success'))
     <div class="alert alert-success">
         {{ session('success') }}
@@ -14,6 +14,7 @@
         {{ session('error') }}
     </div>
 @endif
+
 @if ($errors->any())
     <div class="alert alert-danger">
         <ul>
@@ -35,55 +36,49 @@
 
                     <div class="card-body">
                         @if (Auth::check())
-                            <!-- ฟอร์มสำหรับส่งข้อมูล -->
+                            <!-- แบบฟอร์มสำหรับส่งข้อมูลการยืม -->
                             <form method="POST" action="{{ route('borrow-item.store') }}">
                                 @csrf
                                 <input type="hidden" name="item_id" value="{{ $item->id }}">
                                 <input type="hidden" name="borrow_date" value="{{ $borrow_date }}">
                                 <input type="hidden" name="booking_stadium_id" value="{{ $booking_stadium_id }}">
-                                {{-- <input type="hidden" name="stadium_id" value="{{ $stadium_id }}"> --}}
-
+                                
                                 <!-- ข้อมูลอุปกรณ์ -->
                                 <div class="form-row d-flex justify-content-between" style="gap: 5px;">
                                     <div class="form-group col-md-6">
                                         <label for="item_name">{{ __('ชื่ออุปกรณ์') }}</label>
-                                        <input type="text" id="item_name" name="item_name" class="form-control"
-                                            style="background-color:#e2e2e2" value="{{ $item->item_name }}" readonly>
+                                        <input type="text" id="item_name" name="item_name" class="form-control" style="background-color:#e2e2e2" value="{{ $item->item_name }}" readonly>
                                     </div>
                                     <div class="form-group col-md-6">
                                         <label for="item_code">{{ __('รหัสอุปกรณ์') }}</label>
-                                        <input type="text" id="item_code" class="form-control" name="item_code"
-                                            style="background-color:#e2e2e2" value="{{ $item->item_code }}" readonly>
+                                        <input type="text" id="item_code" class="form-control" name="item_code" style="background-color:#e2e2e2" value="{{ $item->item_code }}" readonly>
                                     </div>
                                 </div>
 
                                 <div class="form-row d-flex justify-content-between" style="gap: 5px;">
                                     <div class="form-group col-md-6 mt-2">
                                         <label for="item_type">{{ __('ประเภท') }}</label>
-                                        <input type="text" id="item_type" name="item_type" class="form-control"
-                                            style="background-color:#e2e2e2" value="{{ $item->itemType->type_name }} "
-                                            readonly>
+                                        <input type="text" id="item_type" name="item_type" class="form-control" style="background-color:#e2e2e2" value="{{ $item->itemType->type_name }}" readonly>
                                     </div>
 
                                     <div class="form-group col-md-6 mt-2">
                                         <label for="price">{{ __('ราคา') }}</label>
-                                        <input type="text" id="price" name="price" class="form-control"
-                                            style="background-color:#e2e2e2" value="{{ $item->price }} บาท" readonly>
+                                        <input type="text" id="price" name="price" class="form-control" style="background-color:#e2e2e2" value="{{ $item->price }} บาท" readonly>
                                     </div>
                                 </div>
 
                                 <div class="form-row d-flex justify-content-between" style="gap: 5px;">
                                     <div class="form-group col-md-6 mt-2">
                                         <label for="borrow_date">{{ __('วันที่ยืม') }}</label>
-                                        <input type="date" id="borrow_date" name="borrow_date" class="form-control"
-                                            value="{{ request('date') }}" readonly>
+                                        <select id="borrow_date" name="borrow_date" class="form-control" required>
+                                            @foreach ($availableDates as $date)
+                                                <option value="{{ \Carbon\Carbon::parse($date)->format('Y-m-d') }}">{{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
-
                                     <div class="form-group col-md-6 mt-2">
                                         <label for="borrow_quantity">{{ __('จำนวน') }}</label>
-                                        <input type="number" id="borrow_quantity" name="borrow_quantity"
-                                            class="form-control" min="1" max="{{ $item->item_quantity }}"
-                                            value="1" required>
+                                        <input type="number" id="borrow_quantity" name="borrow_quantity" class="form-control" min="1" max="{{ $item->item_quantity }}" value="1" required>
                                     </div>
                                 </div>
 
@@ -97,13 +92,12 @@
                                         </select>
                                     </div>
 
-                                    <!-- ปุ่มเลือกช่วงเวลา -->
+                                    <!-- การเลือกช่วงเวลา -->
                                     <div class="form-group col-md-12 mt-2">
                                         <label>{{ __('เลือกช่วงเวลา') }}</label>
                                         <div class="d-flex flex-wrap" id="time-slot-buttons">
                                             <!-- ปุ่มช่วงเวลาจะถูกสร้างที่นี่โดย JavaScript -->
                                         </div>
-
                                         <input type="hidden" name="time_slot_id" id="time_slot_id" value="">
                                     </div>
                                 </div>
@@ -125,7 +119,7 @@
         </div>
     </div>
 
-    <!-- ส่วน JavaScript สำหรับจัดการช่วงเวลา -->
+    <!-- JavaScript สำหรับการจัดการช่วงเวลา -->
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -179,7 +173,7 @@
                     timeSlotsInput.value = '';
                 });
 
-                // ตั้งค่าเบื้องต้น
+                // กำหนดช่วงวันยืมเริ่มต้น
                 const borrowDateInput = document.getElementById('borrow_date');
                 const today = new Date().toISOString().split('T')[0];
                 const maxDate = new Date();
@@ -188,12 +182,6 @@
 
                 borrowDateInput.setAttribute('min', today);
                 borrowDateInput.setAttribute('max', maxDateStr);
-
-                // เรียกใช้ครั้งแรกเพื่อสร้างปุ่มสำหรับสนามที่เลือกเริ่มต้น
-                if (stadiumSelect.value) {
-                    const event = new Event('change');
-                    stadiumSelect.dispatchEvent(event);
-                }
             });
         </script>
     @endpush
