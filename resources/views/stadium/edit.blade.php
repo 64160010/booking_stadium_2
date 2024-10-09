@@ -48,9 +48,21 @@
                             <div id="time-slots-container">
                                 @foreach ($time_slots as $timeSlot)
                                     <div class="input-group mb-2">
-                                        <input type="time" class="form-control" name="start_time[]" value="{{ explode('-', $timeSlot->time_slot)[0] }}" required>
+                                        <select class="form-select" name="start_time[]" required>
+                                            @for ($i = 0; $i <= 23; $i++)
+                                                <option value="{{ sprintf('%02d:00', $i) }}" {{ explode('-', $timeSlot->time_slot)[0] == sprintf('%02d:00', $i) ? 'selected' : '' }}>
+                                                    {{ sprintf('%02d:00', $i) }}
+                                                </option>
+                                            @endfor
+                                        </select>
                                         <span class="input-group-text">ถึง</span>
-                                        <input type="time" class="form-control" name="end_time[]" value="{{ explode('-', $timeSlot->time_slot)[1] }}" required>
+                                        <select class="form-select" name="end_time[]" required>
+                                            @for ($i = 1; $i <= 24; $i++)
+                                                <option value="{{ sprintf('%02d:00', $i) }}" {{ explode('-', $timeSlot->time_slot)[1] == sprintf('%02d:00', $i) ? 'selected' : '' }}>
+                                                    {{ sprintf('%02d:00', $i) }}
+                                                </option>
+                                            @endfor
+                                        </select>
                                         <button type="button" class="btn btn-outline-danger remove-time-slot">ลบ</button>
                                     </div>
                                 @endforeach
@@ -80,9 +92,13 @@
             const div = document.createElement('div');
             div.classList.add('input-group', 'mb-2');
             div.innerHTML = `
-                <input type="time" class="form-control" name="start_time[]" required>
+                <select class="form-select" name="start_time[]" required>
+                    ${generateHourOptions()}
+                </select>
                 <span class="input-group-text">ถึง</span>
-                <input type="time" class="form-control" name="end_time[]" required>
+                <select class="form-select" name="end_time[]" required>
+                    ${generateHourOptions(true)}
+                </select>
                 <button type="button" class="btn btn-outline-danger remove-time-slot">ลบ</button>
             `;
             container.appendChild(div);
@@ -93,7 +109,7 @@
                 if (container.children.length > 1) {
                     event.target.parentElement.remove();
                 } else {
-                    alert('ต้องมีช่วงเวลาอย่างน้อยหนึ่งช่วง');
+                    alert('อย่างน้อยต้องมีช่วงเวลาอย่างน้อยหนึ่งช่วง');
                 }
             }
         });
@@ -103,16 +119,43 @@
             const endTimes = document.getElementsByName('end_time[]');
 
             for (let i = 0; i < startTimes.length; i++) {
-                const startTime = startTimes[i].value;
-                const endTime = endTimes[i].value;
-
-                if (startTime >= endTime) {
+                if (startTimes[i].value >= endTimes[i].value) {
                     alert('กรุณากรอกเวลาที่ถูกต้อง: เวลาเริ่มต้องมาก่อนเวลาสิ้นสุด');
                     event.preventDefault();
                     return;
                 }
             }
+
+            if (checkDuplicateTimeSlots()) {
+                alert('มีช่วงเวลาที่ซ้ำกัน กรุณาตรวจสอบ');
+                event.preventDefault();
+            }
         });
+
+        function generateHourOptions(end = false) {
+            let options = '';
+            const startHour = end ? 1 : 0;
+            const endHour = end ? 24 : 23;
+            for (let i = startHour; i <= endHour; i++) {
+                options += `<option value="${String(i).padStart(2, '0')}:00">${String(i).padStart(2, '0')}:00</option>`;
+            }
+            return options;
+        }
+
+        function checkDuplicateTimeSlots() {
+            const startTimes = document.getElementsByName('start_time[]');
+            const endTimes = document.getElementsByName('end_time[]');
+            const timeSlots = [];
+            for (let i = 0; i < startTimes.length; i++) {
+                const startTime = startTimes[i].value;
+                const endTime = endTimes[i].value;
+                if (timeSlots.some(slot => slot.start === startTime && slot.end === endTime)) {
+                    return true;
+                }
+                timeSlots.push({ start: startTime, end: endTime });
+            }
+            return false;
+        }
     });
 </script>
 @endpush
