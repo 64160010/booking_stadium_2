@@ -56,10 +56,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('booking.detail', ['id' => session('booking_stadium_id') ?? 'null']) }}">
+                            <a class="nav-link" href="{{ route('booking.detail', ['id' => $booking_stadium_id ?? 'null']) }}">
                                 <i class="fas fa-calendar-alt me-1"></i> {{ __('รายละเอียดการจองสนาม') }}
                             </a>
                         </li>
+                        
                         
                         
                       

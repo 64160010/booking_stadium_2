@@ -121,34 +121,32 @@ class LendingController extends Controller
         return redirect()->route('lending.index')->with('success', 'ลบอุปกรณ์สำเร็จ!');
     }
 
-    // แสดงฟอร์มยืมอุปกรณ์
     public function borrowItem($id)
-    {
-        $item = Item::findOrFail($id);
-        $stadiums = Stadium::with('timeSlots')->get();
-        $borrow_date = now()->format('Y-m-d'); // กำหนดวันที่ยืมเป็นวันที่ปัจจุบัน
+{
+    $item = Item::findOrFail($id);
+    $stadiums = Stadium::with('timeSlots')->get();
+    $borrow_date = now()->format('Y-m-d'); // กำหนดวันที่ยืมเป็นวันที่ปัจจุบัน
 
-        $availableDates = [];
+    // ดึงข้อมูลการยืมล่าสุดที่เกี่ยวข้องกับผู้ใช้
+    $currentBorrow = Borrow::where('users_id', auth()->user()->id) // ดึงข้อมูลการยืมที่เกี่ยวข้องกับผู้ใช้ที่เข้าสู่ระบบ
+        ->latest() // จัดเรียงจากใหม่ไปเก่า
+        ->first(); // ดึงรายการแรก (ล่าสุด)
 
-        // สมมติว่าคุณต้องการอนุญาตให้ยืมสำหรับ 10 วันถัดไป
-    // for ($i = 0; $i < 10; $i++) {
-    //     $availableDates[] = now()->addDays($i)->toDateString(); // ดึงวันที่ที่สามารถยืมได้
-    // }
+    // ตรวจสอบว่ามีการยืมและดึง booking_stadium_id
+    $booking_stadium_id = $currentBorrow ? $currentBorrow->booking_stadium_id : null;
 
-        // ตรวจสอบว่า booking_stadium_id ถูกกำหนดหรือไม่
-    $booking_stadium_id = session('booking_stadium_id');
+    // ดึงข้อมูล booking details ถ้ามี booking_stadium_id
+    $bookingDetails = $booking_stadium_id ? BookingDetail::where('booking_stadium_id', $booking_stadium_id)->get() : collect();
 
-    if ($booking_stadium_id) {
-        $bookingDetails = BookingDetail::where('booking_stadium_id', $booking_stadium_id)->get();
-
-        // รวมวันที่จาก booking_detail
-        foreach ($bookingDetails as $detail) {
-            $availableDates[] = $detail->booking_date; // เพิ่มวันที่จองสนามลงใน availableDates
-        }
+    // รวมวันที่จาก booking_details
+    $availableDates = [];
+    foreach ($bookingDetails as $detail) {
+        $availableDates[] = $detail->booking_date; // เพิ่มวันที่จองสนามลงใน availableDates
     }
 
-        return view('lending.borrow-item', compact('item', 'stadiums', 'borrow_date' , 'booking_stadium_id','availableDates'));
-    }
+    return view('lending.borrow-item', compact('item', 'stadiums', 'borrow_date', 'booking_stadium_id', 'availableDates'));
+}
+
 
     // เก็บข้อมูลการยืม
     public function storeBorrow(Request $request)
@@ -182,7 +180,8 @@ class LendingController extends Controller
             'item_id' => $request->item_id,
             'borrow_date' => $request->borrow_date,
             'borrow_status' => 'รอการชำระเงิน',
-            'time_slot_id' => $timeSlotId, // ใช้ ID ที่ถูกต้อง
+            'time_slot_id' => $request->time_slot_id,
+            // 'time_slot_id' => $timeSlotId, // ใช้ ID ที่ถูกต้อง
             'time_slot_stadium_id' => $request->stadium_id,
             'booking_stadium_id' => $request->booking_stadium_id,
         ]);

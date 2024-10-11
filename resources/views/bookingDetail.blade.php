@@ -103,17 +103,19 @@
     @endif
     
     
-        <!-- เงื่อนไขสำหรับปุ่มยืมอุปกรณ์ -->
-        @if ($bookingDetails->isNotEmpty())
-            <h3 class="mt-3">สามารถยืมอุปกรณ์ได้</h3>
-        @else
-            <p>คุณต้องจองสนามก่อนนะ ถึงจะสามารถยืมอุปกรณ์ได้</p>
-        @endif
+       
+       <!-- เงื่อนไขสำหรับปุ่มยืมอุปกรณ์ -->
+@if (!empty($bookingDetails) && $bookingDetails->isNotEmpty())
+<h3 class="mt-3">สามารถยืมอุปกรณ์ได้</h3>
+@else
+<p>คุณต้องจองสนามก่อนนะ ถึงจะสามารถยืมอุปกรณ์ได้</p>
+@endif
+
 
         <div class="d-flex justify-content-between mt-4">
             <button class="btn btn-outline-secondary" onclick="window.location='{{ route('booking') }}'">ย้อนกลับ</button>
             <div>
-                <button class="btn btn-outline-secondary me-2" onclick="window.location='{{ route('lending.index', ['booking_stadium_id' => $bookingDetails[0]->booking_stadium_id]) }}'">ยืมอุปกรณ์</button>
+                {{-- <button class="btn btn-outline-secondary me-2" onclick="window.location='{{ route('lending.index', ['booking_stadium_id' => $bookingDetails[0]->booking_stadium_id]) }}'">ยืมอุปกรณ์</button> --}}
                 <button class="btn btn-success">ยืนยันการจอง</button>
             </div>
         </div>
