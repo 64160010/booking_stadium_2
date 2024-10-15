@@ -22,4 +22,10 @@ class BookingStadium extends Model
     {
         return $this->belongsTo(User::class, 'users_id');
     }
+
+    public function details()
+{
+    return $this->hasMany(BookingDetail::class, 'booking_stadium_id');
+}
+
 }
