@@ -25,99 +25,115 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
 
+    <style>
+        /* ส่วนของ navbar */
+        .navbar-top {
+            background-color: #279a3e;
+            padding: 10px 0;
+        }
+
+        .navbar-bottom {
+            background-color: #ffffff;
+            padding: 20px 0; /* เพิ่ม padding เพื่อเพิ่มความสูง */
+            font-size: 15px; /* เพิ่มขนาดตัวอักษร */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+       
+        }
+
+        /* กำหนดสีให้ลิงก์ใน navbar-bottom */
+        .navbar-bottom a {
+            color: #4261c5;
+            margin: 0 20px;
+            text-transform: uppercase;
+           
+        }
+
+        
+    
+
+        .navbar-bottom a:hover {
+            color: #304998;
+        }
+
+        .navbar-brand img {
+            width: 40px;
+            height: 40px;
+            margin-right: 8px;
+        }
+    </style>
+
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
 
 <body>
     <div id="app">
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-md navbar-light shadow-sm">
-            <div class="container">
-                <a class="navbar-brand d-flex align-items-center" href="{{ route('admin.home') }}">
-                    <i class="fas fa-football-ball me-2"></i>
-                    {{ config('app.name', 'Laravel') }}
+        <!-- ส่วนบนของ Navbar -->
+        <nav class="navbar-top">
+            <div class="container d-flex justify-content-between align-items-center">
+                <!-- Brand and Home link -->
+                <a class="navbar-brand d-flex align-items-center " href="{{ route('admin.home') }}">
+                    <img  src="https://www.svgrepo.com/show/163314/football.svg" alt="Football Icon">
+                    ฟุตบอลคลับ
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <!-- Left Side Of Navbar -->
-                    <ul class="navbar-nav me-auto"></ul>
-
-                    <!-- Right Side Of Navbar -->
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('booking') }}">
-                                <i class="fas fa-calendar-alt me-1"></i> {{ __('จองสนาม') }}
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('booking.detail', ['id' => $booking_stadium_id ?? 'null']) }}">
-                                <i class="fas fa-calendar-alt me-1"></i> {{ __('รายละเอียดการจองสนาม') }}
-                            </a>
-                        </li>
-                        
-                        
-                        
-                      
-                        
-
-
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('lending.index') }}">
-                                <i class="fas fa-basketball-ball me-1"></i> {{ __('ยืมอุปกรณ์') }}
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('lending.borrow-detail') }}">
-                                <i class="fas fa-basketball-ball me-1"></i> {{ __('รายละเอียดการยืมอุปกรณ์') }}
-                            </a>
-                        </li>
-
-
-                        @guest
-                            @if (Route::has('login'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('login') }}">
-                                        <i class="fas fa-sign-in-alt me-1"></i> {{ __('เข้าสู่ระบบ') }}
-                                    </a>
-                                </li>
-                            @endif
-
-                            @if (Route::has('register'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('register') }}">
-                                        <i class="fas fa-user-plus me-1"></i> {{ __('สมัครสมาชิก') }}
-                                    </a>
-                                </li>
-                            @endif
-                        @else
-                            <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
-                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                    <i class="fas fa-user me-1"></i> {{ Auth::user()->fname }}
+                <!-- Authentication Links -->
+                <ul class="navbar-nav">
+                    @guest
+                        @if (Route::has('login'))
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="{{ route('login') }}">
+                                    <i class="fas fa-sign-in-alt me-1"></i> {{ __('เข้าสู่ระบบ') }}
                                 </a>
-                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="{{ route('profile.edit') }}">
-                                        <i class="fas fa-edit me-1"></i> {{ __('แก้ไขโปรไฟล์') }}
-                                    </a>
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                        <i class="fas fa-sign-out-alt me-1"></i> {{ __('ออกจากระบบ') }}
-                                    </a>
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                        @csrf
-                                    </form>
-                                </div>
                             </li>
-                        @endguest
-                    </ul>
-                </div>
+                        @endif
+
+                        @if (Route::has('register'))
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="{{ route('register') }}">
+                                    <i class="fas fa-user-plus me-1"></i> {{ __('สมัครสมาชิก') }}
+                                </a>
+                            </li>
+                        @endif
+                    @else
+                        <li class="nav-item dropdown">
+                            <a id="navbarDropdown" class="nav-link dropdown-toggle text-white" href="#" role="button"
+                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                <i class="fas fa-user me-1"></i> {{ Auth::user()->fname }}
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                    <i class="fas fa-edit me-1"></i> {{ __('แก้ไขโปรไฟล์') }}
+                                </a>
+                                <a class="dropdown-item" href="{{ route('logout') }}"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <i class="fas fa-sign-out-alt me-1"></i> {{ __('ออกจากระบบ') }}
+                                </a>
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                    @csrf
+                                </form>
+                            </div>
+                        </li>
+                    @endguest
+                </ul>
+            </div>
+        </nav>
+
+        <!-- ส่วนล่างของ Navbar -->
+        <nav class="navbar-bottom">
+            <div class="container d-flex justify-content-start">
+                <a href="{{ route('booking') }}">
+                    <i class="fas fa-calendar-alt me-1"></i> {{ __('จองสนาม') }}
+                </a>
+                <a href="{{ route('booking.detail', ['id' => $booking_stadium_id ?? 'null']) }}">
+                    <i class="fas fa-calendar-alt me-1"></i> {{ __('รายละเอียดการจองสนาม') }}
+                </a>
+                <a href="{{ route('lending.index') }}">
+                    <i class="fas fa-basketball-ball me-1"></i> {{ __('ยืมอุปกรณ์') }}
+                </a>
+                <a href="{{ route('lending.borrow-detail') }}">
+                    <i class="fas fa-basketball-ball me-1"></i> {{ __('รายละเอียดการยืมอุปกรณ์') }}
+                </a>
             </div>
         </nav>
 
@@ -125,8 +141,6 @@
         <main class="py-4">
             @yield('content')
         </main>
-
-
     </div>
 
     <!-- Scripts -->

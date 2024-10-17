@@ -102,4 +102,3 @@ Route::delete('/booking/{id}', [BookingController::class, 'destroy'])->name('boo
 
 Route::get('/bookingDetail/{id}', [BookingController::class, 'show'])->name('booking.detail');
 Route::post('/confirmBooking/{booking_stadium_id}', [BookingController::class, 'confirmBooking'])->name('confirmBooking');
-

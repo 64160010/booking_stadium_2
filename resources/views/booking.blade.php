@@ -6,7 +6,7 @@
         <div class="row justify-content-center">
             <div class="col-12">
                 <div class="card shadow-lg border-0">
-                    <div class="card-header bg-primary text-white text-center">
+                    <div style="background-color:#279a3e;" class="card-header text-white text-center">
                         <h4>{{ __('การจองสนาม') }}</h4>
                     </div>
                     <div class="card-body p-3">
@@ -42,7 +42,14 @@
                                     <!-- การเลือกช่วงเวลา -->
                                     <div class="d-flex flex-wrap">
                                         @foreach ($stadium->timeSlots as $timeSlot)
-                                            <button class="btn btn-outline-primary m-1 time-slot-button" data-stadium="{{ $stadium->id }}" data-time="{{ $timeSlot->time_slot }}" onclick="selectTimeSlot(this, {{ $stadium->id }})">{{ $timeSlot->time_slot }}</button>
+                                            <button class="btn m-1 time-slot-button 
+                                                @if ($stadium->stadium_status != 'พร้อมให้บริการ') btn-secondary disabled @else btn-outline-primary @endif" 
+                                                data-stadium="{{ $stadium->id }}" 
+                                                data-time="{{ $timeSlot->time_slot }}" 
+                                                onclick="selectTimeSlot(this, {{ $stadium->id }})" 
+                                                @if ($stadium->stadium_status != 'พร้อมให้บริการ') disabled @endif>
+                                                {{ $timeSlot->time_slot }}
+                                            </button>
                                         @endforeach
                                     </div>
                                 </div>
@@ -79,6 +86,12 @@
     // ฟังก์ชันสำหรับจัดการการเลือกช่วงเวลา
     function selectTimeSlot(button, stadiumId) {
         const time = button.getAttribute('data-time'); // รับค่าช่วงเวลาที่เลือก
+        // ตรวจสอบว่าเป็นปุ่มที่ถูกปิดอยู่หรือไม่
+        if (button.classList.contains('disabled')) {
+            alert('สนามนี้อยู่ในสถานะปิดปรับปรุง ไม่สามารถเลือกช่วงเวลาได้'); // แสดงข้อความเมื่อกดปุ่มที่ถูกปิด
+            return;
+        }
+
         // กำหนดค่าเริ่มต้นสำหรับสนามถ้ายังไม่มี
         if (!selectedTimeSlots[stadiumId]) {
             selectedTimeSlots[stadiumId] = [];
