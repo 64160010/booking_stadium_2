@@ -20,11 +20,30 @@ class LendingController extends Controller
     }
 
     // แสดงรายการอุปกรณ์
-    public function index()
-    {
-        $items = Item::with('itemType')->get();
-        return view('lending.index', compact('items'));
+    public function index(Request $request)
+{
+    $search = $request->get('search');
+    $itemTypeId = $request->get('item_type_id');
+
+    $query = Item::query();
+
+    if ($search) {
+        $query->where('item_name', 'like', '%' . $search . '%');
     }
+
+    if ($itemTypeId) {
+        $query->where('item_type_id', $itemTypeId);
+    }
+
+    $items = $query->paginate(10); // Limit to 10 items per page
+
+    $itemTypes = ItemType::all();
+
+    return view('lending.index', compact('items', 'itemTypes'));
+}
+
+    
+
 
     // แสดงฟอร์มเพิ่มอุปกรณ์
     public function addItem()
@@ -221,7 +240,11 @@ class LendingController extends Controller
     {
         // ดึงข้อมูลการยืมทั้งหมด (หรือปรับให้เหมาะสมตามที่คุณต้องการ)
         $borrows = Borrow::with('item', 'user', 'details','stadium')->where('users_id', auth()->user()->id)->get(); // ตัวอย่างดึงข้อมูลตามผู้ใช้ที่ล็อกอิน
-        return view('lending.borrow-detail', compact('borrows'));
+
+          // สมมุติว่าเราจะส่งอุปกรณ์แรกจากการยืม
+    $item = $borrows->isNotEmpty() ? $borrows->first()->item : null;
+
+        return view('booking.detail', compact('borrows'));
         
     }
 
@@ -230,7 +253,7 @@ class LendingController extends Controller
     $borrow = Borrow::findOrFail($id);
     $borrow->delete(); // ลบรายการการยืม
 
-    return redirect()->route('lending.borrow-detail')->with('success', 'ลบรายการยืมสำเร็จ!');
+    return redirect()->route('booking.detail')->with('success', 'ลบรายการยืมสำเร็จ!');
 }
 
 }    

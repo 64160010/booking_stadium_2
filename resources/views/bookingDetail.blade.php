@@ -118,10 +118,22 @@
 
             <!-- เงื่อนไขสำหรับปุ่มยืมอุปกรณ์ -->
             @if (!empty($bookingDetails) && $bookingDetails->isNotEmpty())
-                <h3 class="mt-3">สามารถยืมอุปกรณ์ได้</h3>
-            @else
-                <p>คุณต้องจองสนามก่อนนะ ถึงจะสามารถยืมอุปกรณ์ได้</p>
-            @endif
+    <h3 class="mt-3">สามารถยืมอุปกรณ์ได้</h3>
+    <!-- ปุ่มไปหน้ายืมอุปกรณ์ -->
+    <div class="text-end">
+        @if (isset($item))
+            <a href="{{ route('lending.index', ['item_id' => $item->id]) }}" class="btn btn-primary">ยืมอุปกรณ์</a>
+        @else
+            <p>ไม่พบข้อมูลอุปกรณ์</p>
+        @endif
+    </div>
+@else
+    <p>คุณต้องจองสนามก่อนนะ ถึงจะสามารถยืมอุปกรณ์ได้</p>
+    <div class="text-end">
+        <a href="{{ route('booking') }}" class="btn btn-warning">ไปจองสนาม</a>
+    </div>
+@endif
+
 
             <div class="d-flex justify-content-between mt-4">
                 <button class="btn btn-outline-secondary" onclick="window.location='{{ route('booking') }}'">ย้อนกลับ</button>
