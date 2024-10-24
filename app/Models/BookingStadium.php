@@ -28,4 +28,14 @@ class BookingStadium extends Model
     return $this->hasMany(BookingDetail::class, 'booking_stadium_id');
 }
 
+public function payment()
+{
+    return $this->hasOne(PaymentBooking::class, 'booking_stadium_id');
+}
+
+public function borrow()
+{
+    return $this->hasMany(Borrow::class, 'booking_stadium_id');
+}
+
 }

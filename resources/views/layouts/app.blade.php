@@ -192,6 +192,9 @@
                 <a href="{{ route('booking.detail', ['id' => $booking_stadium_id ?? 'null']) }}">
                     <i class="fas fa-info-circle"></i> {{ __('รายละเอียดการจองสนาม') }}
                 </a>
+                <a href="{{ route('history.booking', ['id' => $booking_stadium_id ?? 'null']) }}">
+                    <i class="fas fa-info-circle"></i> {{ __('ประวัติการจอง') }}
+                </a>
             </div>
         </nav>
 
