@@ -44,16 +44,27 @@ class PaymentController extends Controller
         $request->transfer_slip->move(public_path('uploads/slips'), $fileName);
     }
 
-    // Save payment data
-    $payment = new PaymentBooking();
-    $payment->amount = $request->input('transfer_amount');
-    $payment->confirmation_pic = $fileName;
-    $payment->booking_stadium_id = $request->input('booking_code');
-    $payment->payer_name = $request->input('payer_name');
-    $payment->phone_number = $request->input('phone_number');
-    $payment->bank_name = $request->input('select_bank'); // Ensure this matches ENUM
-    $payment->transfer_datetime = $request->input('transfer_datetime');
-    $payment->save();
+     // Check for borrowing details
+     $borrow = Borrow::where('booking_stadium_id', $request->input('booking_code'))
+     ->where('users_id', auth()->id()) // Ensure this is the current user
+     ->first();
+
+   // Save payment data
+   $payment = new PaymentBooking();
+   $payment->amount = $request->input('transfer_amount');
+   $payment->confirmation_pic = $fileName;
+   $payment->booking_stadium_id = $request->input('booking_code');
+   $payment->payer_name = $request->input('payer_name');
+   $payment->phone_number = $request->input('phone_number');
+   $payment->bank_name = $request->input('select_bank');
+   $payment->transfer_datetime = $request->input('transfer_datetime');
+
+   // Store borrow_id if there is a related borrow record
+   if ($borrow) {
+       $payment->borrow_id = $borrow->id; // Assuming 'id' is the primary key of the borrow record
+   }
+
+   $payment->save();
 
     return redirect()->route('booking')->with('success', 'การชำระเงินถูกบันทึกเรียบร้อยแล้ว');
 }
