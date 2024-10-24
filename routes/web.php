@@ -97,10 +97,7 @@ Route::get('/lending/borrow-detail', [LendingController::class, 'borrowDetail'])
     ->name('lending.borrow-detail')
     ->middleware('auth'); // เพิ่ม middleware ถ้าต้องการให้ต้องล็อกอิน
 
-Route::delete('/lending/borrow/{id}', [LendingController::class, 'destroyBorrow'])->name('lending.destroyBorrow');
-
-
-
+    Route::delete('/lending/borrow/{id}', [LendingController::class, 'destroyBorrow'])->name('lending.borrow.destroy');
 
 Route::get('/bookingDetail/{id}', [BookingController::class, 'show'])->name('booking.detail');
 Route::post('/confirmBooking/{booking_stadium_id}', [BookingController::class, 'confirmBooking'])->name('confirmBooking');

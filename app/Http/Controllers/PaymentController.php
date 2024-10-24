@@ -3,29 +3,58 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\PaymentBooking;
+use App\Models\BookingStadium;
+use App\Models\Borrow;
 
 class PaymentController extends Controller
 {
+    public function showPaymentForm($bookingId)
+    {
+        // ดึงข้อมูลการจองสนาม
+        $booking = BookingStadium::find($bookingId);
+    
+        // ดึงรายการการจองทั้งหมดของผู้ใช้
+        $bookings = BookingStadium::where('users_id', auth()->id())->get();
+    
+        // ส่งข้อมูลไปยัง view
+        return view('paymentBooking', [
+            'booking' => $booking,
+            'bookings' => $bookings, // ส่งตัวแปร bookings ไปยังวิว
+        ]);
+    }
+    
+    // ประมวลผลการชำระเงิน
     public function processPayment(Request $request)
-{
-    // Validate the request
-    $request->validate([
-        'booking_code' => 'required|string',
-        'payer_name' => 'required|string',
-        'phone_number' => 'required|string',
-        'payment_date_time' => 'required|date',
-        'amount' => 'required|numeric',
-        'slip_upload' => 'required|file|mimes:jpg,png,jpeg,pdf|max:2048', // กำหนดขนาดไฟล์สูงสุดที่อัปโหลด
+    {
+        // Validate request data
+    $validatedData = $request->validate([
+        'booking_code' => 'required|exists:booking_stadium,id',
+        'payer_name' => 'required|string|max:255',
+        'phone_number' => 'required|string|max:15',
+        'select_bank' => 'required|in:กสิกรไทย,ไทยพาณิชย์,กรุงไทย', // Validate against ENUM values
+        'transfer_datetime' => 'required|date',
+        'transfer_amount' => 'required|numeric',
+        'transfer_slip' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
-    // Process the payment (save to database, send notification, etc.)
+    // Handle file upload
+    if ($request->hasFile('transfer_slip')) {
+        $fileName = time().'.'.$request->transfer_slip->extension();
+        $request->transfer_slip->move(public_path('uploads/slips'), $fileName);
+    }
 
-    return redirect()->route('payment')->with('success', 'การชำระเงินของคุณได้รับการบันทึกแล้ว!');
-}
-public function showPaymentForm($booking_stadium_id)
-{
-    // คุณอาจต้องการดึงข้อมูลการจองและส่งไปยังหน้าแจ้งชำระเงิน
-    return view('paymentBooking', compact('booking_stadium_id'));
-}
+    // Save payment data
+    $payment = new PaymentBooking();
+    $payment->amount = $request->input('transfer_amount');
+    $payment->confirmation_pic = $fileName;
+    $payment->booking_stadium_id = $request->input('booking_code');
+    $payment->payer_name = $request->input('payer_name');
+    $payment->phone_number = $request->input('phone_number');
+    $payment->bank_name = $request->input('select_bank'); // Ensure this matches ENUM
+    $payment->transfer_datetime = $request->input('transfer_datetime');
+    $payment->save();
 
+    return redirect()->route('booking')->with('success', 'การชำระเงินถูกบันทึกเรียบร้อยแล้ว');
+}
 }

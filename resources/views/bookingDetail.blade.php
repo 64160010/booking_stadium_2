@@ -95,11 +95,13 @@
 <table class="table table-bordered table-striped">
     <thead class="table-light">
         <tr>
-            <th>รหัสการยืม</th>
-            <th>ชื่ออุปกรณ์</th>
             <th>สนามที่ใช้</th>
             <th>วันที่ยืม</th>
+            <th>ชื่ออุปกรณ์</th>
+            
+          
             <th>เวลา</th>
+            <th>ชั่วโมง</th>
             <th>จำนวน</th>
             <th>ราคา</th>
             <th>ลบ</th>
@@ -134,11 +136,13 @@
 
             @foreach ($groupedDetails as $group)
                 <tr id="borrow-row-{{ $group['borrow']->id }}">
-                    <td>{{ $group['borrow']->id }}</td>
-                    <td>{{ $group['item_name'] }}</td>
                     <td>{{ $group['stadium_name'] }}</td>
                     <td>{{ $group['borrow']->borrow_date }}</td>
+                    <td>{{ $group['item_name'] }}</td>
+                    
+                    
                     <td>{{ implode(', ', $group['time_slots']) }}</td> <!-- รวมช่วงเวลาเป็น string -->
+                    <td></td>
                     <td>{{ $group['total_quantity'] }}</td>
                     <td>{{ number_format($group['total_price']) }} บาท</td>
                     <td>

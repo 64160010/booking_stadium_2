@@ -184,8 +184,16 @@ public function confirmBooking($booking_stadium_id)
     $booking = BookingStadium::find($booking_stadium_id);
 
     if ($booking && $booking->booking_status === 'รอการชำระเงิน') {
-        // อัปเดตสถานะการจองเป็น 'รอการตรวจสอบ'
-        $booking->update(['booking_status' => 'รอการตรวจสอบ']);
+        // ไม่อัปเดตสถานะการจอง
+        // $booking->update(['booking_status' => 'รอการตรวจสอบ']); // ลบหรือคอมเมนต์บรรทัดนี้
+
+        // ดึงการยืมที่เกี่ยวข้อง
+        $borrowing = Borrow::where('booking_stadium_id', $booking_stadium_id)->first();
+
+        if ($borrowing) {
+            // ไม่อัปเดตสถานะการยืม
+            // $borrowing->update(['borrow_status' => 'รอการตรวจสอบ']); // ลบหรือคอมเมนต์บรรทัดนี้
+        }
 
         // ส่งกลับไปยังหน้าชำระเงินพร้อมข้อมูลการจอง
         return redirect()->route('paymentBooking', ['booking_stadium_id' => $booking_stadium_id])
@@ -196,6 +204,8 @@ public function confirmBooking($booking_stadium_id)
             ->with('error', 'ไม่สามารถยืนยันการจองได้');
     }
 }
+
+
 
 
 public function showLendingModal($bookingId)
