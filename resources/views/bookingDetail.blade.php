@@ -90,7 +90,7 @@
             @endif
 
             <!-- แสดงรายละเอียดการยืมด้านล่าง -->
-@if ($borrowingDetails->isNotEmpty())
+            @if (isset($borrowingDetails) && $borrowingDetails->isNotEmpty())
 <h2 class="mt-5">รายละเอียดการยืมอุปกรณ์</h2>
 <table class="table table-bordered table-striped">
     <thead class="table-light">
@@ -295,7 +295,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($items as $item)
+                                @forelse($items ?? [] as $item)
                                 <tr>
                                     <td>{{ $item->item_code }}</td>
                                     <td>{{ $item->item_name }}</td>

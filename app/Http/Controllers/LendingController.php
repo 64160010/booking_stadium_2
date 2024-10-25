@@ -248,21 +248,14 @@ class LendingController extends Controller
     return redirect()->back()->with('success', 'ยืมอุปกรณ์สำเร็จ');
 }
     
-
-
-
-    
-public function showBookingDetail($bookingId)
+public function showBookingDetail($id)
 {
-    // ดึงข้อมูลอุปกรณ์ทั้งหมดจากตาราง Item
-    $items = Item::all(); // หรือคุณสามารถปรับ Query ตามที่ต้องการ
+    // ค้นหาข้อมูลการจอง
+    $bookingDetail = Booking::find($id);
+     // ค้นหาข้อมูลการยืมอุปกรณ์ที่เกี่ยวข้อง
+    $borrowingDetails = Borrow::where('booking_id', $id)->get();
 
-    $booking = BookingStadium::with('details')->findOrFail($bookingId);
-   
-    // ส่งตัวแปร $items ไปยัง View 'bookingDetail'
-    return view('bookingDetail', compact('items', 'booking'));
-
-
+    return view('bookingDetail', compact('bookingDetail', 'borrowingDetails'));
 }
 
 public function destroyBorrow($id)
