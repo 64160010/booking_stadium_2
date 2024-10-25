@@ -22,82 +22,93 @@ class BookingController extends Controller
     }
 
     public function store(Request $request)
-{
-    $validatedData = $request->validate([
-        'date' => 'required|date',
-        'timeSlots' => 'required|array' // ตรวจสอบว่า timeSlots เป็น array หรือไม่
-    ]);
-
-    try {
-        // ตรวจสอบว่ามีการสร้าง booking_stadium_id ที่ยังไม่ยืนยันในฐานข้อมูลหรือไม่
-        $existingBooking = BookingStadium::where('users_id', auth()->id())
-            ->where('booking_status', 'รอการชำระเงิน') // เช็คสถานะการจองว่าเป็น "รอการชำระเงิน"
-            ->first();
-
-        // ถ้ามีการจองที่ยังไม่ยืนยันอยู่ ให้ใช้ booking_stadium_id เดิม
-        if ($existingBooking) {
-            $bookingStadiumId = $existingBooking->id;
-        } else {
-            // ถ้าไม่มี ให้สร้างการจองใหม่
-            $bookingStadium = BookingStadium::create([
-                'booking_status' => 'รอการชำระเงิน',
-                'booking_date' => $validatedData['date'],
-                'users_id' => auth()->id(),
-            ]);
-            $bookingStadiumId = $bookingStadium->id;
-        }
-
-        // วนลูปตาม stadiumId และช่วงเวลาที่เลือก
-        foreach ($validatedData['timeSlots'] as $stadiumId => $timeSlots) {
-
-            $totalHours = count($timeSlots);
-
-            // Get stadium price
-            $stadium = Stadium::find($stadiumId);
-            if (!$stadium) {
-                return response()->json(['success' => false, 'message' => 'สนามไม่ถูกต้อง.']);
-            }
-
-            $totalPrice = $stadium->stadium_price * $totalHours;
-
-            foreach ($timeSlots as $timeSlot) {
-                // ดึงข้อมูลของช่วงเวลา
-                $timeSlotData = \DB::table('time_slot')
-                    ->where('time_slot', $timeSlot)
-                    ->where('stadium_id', $stadiumId)
-                    ->first();
-
-                // ถ้าไม่พบข้อมูลช่วงเวลา ให้คืนค่าผิดพลาด
-                if (!$timeSlotData) {
-                    return response()->json(['success' => false, 'message' => 'เวลาหรือสนามไม่ถูกต้อง.']);
-                }
-
-              
-                
-
-                // บันทึกข้อมูลใน booking_detail
-                BookingDetail::create([
-                    'stadium_id' => $stadiumId,
-                    'booking_stadium_id' => $bookingStadiumId,
-                    'booking_total_hour' => $totalHours, // Total hours based on time slots
-                    'booking_total_price' => $totalPrice,
+    {
+        $validatedData = $request->validate([
+            'date' => 'required|date',
+            'timeSlots' => 'required|array' // ตรวจสอบว่า timeSlots เป็น array หรือไม่
+        ]);
+    
+        try {
+            // ตรวจสอบว่ามีการสร้าง booking_stadium_id ที่ยังไม่ยืนยันในฐานข้อมูลหรือไม่
+            $existingBooking = BookingStadium::where('users_id', auth()->id())
+                ->where('booking_status', 'รอการชำระเงิน') // เช็คสถานะการจองว่าเป็น "รอการชำระเงิน"
+                ->first();
+    
+            // ถ้ามีการจองที่ยังไม่ยืนยันอยู่ ให้ใช้ booking_stadium_id เดิม
+            if ($existingBooking) {
+                $bookingStadiumId = $existingBooking->id;
+            } else {
+                // ถ้าไม่มี ให้สร้างการจองใหม่
+                $bookingStadium = BookingStadium::create([
+                    'booking_status' => 'รอการชำระเงิน',
                     'booking_date' => $validatedData['date'],
                     'users_id' => auth()->id(),
-                    'time_slot_id' => $timeSlotData->id, // บันทึก time_slot_id จากข้อมูล time_slot
                 ]);
+                $bookingStadiumId = $bookingStadium->id;
             }
+    
+            // วนลูปตาม stadiumId และช่วงเวลาที่เลือก
+            foreach ($validatedData['timeSlots'] as $stadiumId => $timeSlots) {
+    
+                $totalHours = 1;
+    
+                // Get stadium price
+                $stadium = Stadium::find($stadiumId);
+                if (!$stadium) {
+                    return response()->json(['success' => false, 'message' => 'สนามไม่ถูกต้อง.']);
+                }
+    
+                $totalPrice = $stadium->stadium_price * $totalHours;
+    
+                foreach ($timeSlots as $timeSlot) {
+                    // ตรวจสอบว่ามีการจองในวันที่และช่วงเวลานั้นอยู่แล้วหรือไม่
+                    $existingBookingDetail = BookingDetail::where('stadium_id', $stadiumId)
+                        ->where('booking_date', $validatedData['date'])
+                        ->whereHas('timeSlot', function ($query) use ($timeSlot) {
+                            $query->where('time_slot', $timeSlot);
+                        })
+                        ->exists();
+    
+                    if ($existingBookingDetail) {
+                        // ถ้ามีการจองอยู่แล้ว ให้ส่งข้อความแจ้งเตือน
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'ช่วงเวลาที่คุณเลือกถูกจองแล้ว กรุณาเลือกช่วงเวลาอื่น.'
+                        ]);
+                    }
+    
+                    // ดึงข้อมูลของช่วงเวลา
+                    $timeSlotData = \DB::table('time_slot')
+                        ->where('time_slot', $timeSlot)
+                        ->where('stadium_id', $stadiumId)
+                        ->first();
+    
+                    if (!$timeSlotData) {
+                        return response()->json(['success' => false, 'message' => 'เวลาหรือสนามไม่ถูกต้อง.']);
+                    }
+    
+                    // บันทึกข้อมูลใน booking_detail
+                    BookingDetail::create([
+                        'stadium_id' => $stadiumId,
+                        'booking_stadium_id' => $bookingStadiumId,
+                        'booking_total_hour' => $totalHours,
+                        'booking_total_price' => $totalPrice,
+                        'booking_date' => $validatedData['date'],
+                        'users_id' => auth()->id(),
+                        'time_slot_id' => $timeSlotData->id,
+                    ]);
+                }
+            }
+    
+            return response()->json([
+                'success' => true,
+                'booking_stadium_id' => $bookingStadiumId
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()]);
         }
-
-        // ส่งคืนค่า JSON เมื่อสำเร็จ พร้อม booking_stadium_id
-        return response()->json([
-            'success' => true,
-            'booking_stadium_id' => $bookingStadiumId
-        ]);
-    } catch (\Exception $e) {
-        // จัดการข้อผิดพลาด
-        return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()]);
     }
-}
+    
 
 
 public function show()
@@ -127,6 +138,8 @@ public function show()
                 $bookingStatus = $latestBookingStadium->booking_status;
 
                 return [
+                    'id' => $group->first()->booking_stadium_id, 
+                    'stadium_id' => $group->first()->stadium_id,
                     'stadium_name' => $group->first()->stadium->stadium_name,
                     'booking_date' => $group->first()->booking_date,
                     'time_slots' => $timeSlots,
@@ -141,39 +154,15 @@ public function show()
         $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
 
         // ดึงข้อมูลอุปกรณ์ที่สามารถยืมได้ (ต้องมีการกำหนดเงื่อนไขให้ตรงกับฐานข้อมูลของคุณ)
-        $item = Item::first(); // ตัวอย่างการดึงข้อมูลอุปกรณ์ตัวแรก
+        $items = Item::all(); // ใช้ชื่อให้ตรงกับชื่อของโมเดล (Items คือ อุปกรณ์หลายตัว) // ตัวอย่างการดึงข้อมูลอุปกรณ์ตัวแรก
 
         
-        return view('bookingDetail', compact('groupedBookingDetails', 'bookingDetails', 'borrowingDetails', 'booking_stadium_id', 'item'));
+        return view('bookingDetail', compact('groupedBookingDetails', 'bookingDetails', 'borrowingDetails', 'booking_stadium_id', 'items'));
     } else {
-        $message = 'คุณยังไม่มีรายการจอง ต้องการจองสนามไหม';
+        $message = 'คุณยังไม่มีรายการจอง';
         return view('bookingDetail', compact('message', 'booking_stadium_id'));
     }
 }
-
-
-
-
-
-
-    
-
-
-    
-
-// ฟังก์ชันนี้ใช้เพื่อส่งค่าที่ดึงมาจากการยืมไปยัง borrow-item
-public function showBorrowItem($booking_stadium_id)
-{
-    $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
-    $availableBorrowDates = $borrowingDetails->pluck('borrow_date')->unique(); 
-
-    // แสดงข้อความถ้าไม่มีการยืม
-    $borrowMessage = $borrowingDetails->isEmpty() ? 'ไม่มีรายการยืม' : null;
-
-    return view('borrow-item', compact('availableBorrowDates', 'borrowingDetails', 'borrowMessage'));
-}
-
-    
 
 
 
@@ -195,11 +184,19 @@ public function confirmBooking($booking_stadium_id)
     $booking = BookingStadium::find($booking_stadium_id);
 
     if ($booking && $booking->booking_status === 'รอการชำระเงิน') {
-        // อัปเดตสถานะการจองเป็น 'จองแล้ว'
-        $booking->update(['booking_status' => 'จองแล้ว']);
+        // ไม่อัปเดตสถานะการจอง
+        // $booking->update(['booking_status' => 'รอการตรวจสอบ']); // ลบหรือคอมเมนต์บรรทัดนี้
 
-        // ส่งกลับพร้อมข้อความยืนยัน
-        return redirect()->route('bookingDetail', ['id' => $booking_stadium_id])
+        // ดึงการยืมที่เกี่ยวข้อง
+        $borrowing = Borrow::where('booking_stadium_id', $booking_stadium_id)->first();
+
+        if ($borrowing) {
+            // ไม่อัปเดตสถานะการยืม
+            // $borrowing->update(['borrow_status' => 'รอการตรวจสอบ']); // ลบหรือคอมเมนต์บรรทัดนี้
+        }
+
+        // ส่งกลับไปยังหน้าชำระเงินพร้อมข้อมูลการจอง
+        return redirect()->route('paymentBooking', ['booking_stadium_id' => $booking_stadium_id])
             ->with('success', 'การจองของคุณได้รับการยืนยันเรียบร้อยแล้ว');
     } else {
         // ถ้าไม่พบรายการจองหรือสถานะไม่ถูกต้อง ส่งกลับพร้อมข้อผิดพลาด
@@ -208,6 +205,18 @@ public function confirmBooking($booking_stadium_id)
     }
 }
 
+
+
+
+public function showLendingModal($bookingId)
+{
+    // สมมติว่าคุณมี Booking Model ที่เก็บข้อมูลการจอง
+    $booking = Booking::with('stadium')->find($bookingId);
+    $items = Item::all(); // หรือเรียกใช้ข้อมูลอุปกรณ์ตามความเหมาะสม
+    $group = Booking::find($id);  // ดึงข้อมูลการจองจากฐานข้อมูล
+
+    return view('bookindDetail', compact('booking', 'items','group'));
+}
 
 
 }

@@ -17,6 +17,30 @@
                         <h4>{{ __('รายการอุปกรณ์') }}</h4>
                     </div>
 
+                    <!-- ฟอร์มค้นหาและตัวเลือกประเภทอุปกรณ์ -->
+                    <div class="card-body">
+                        <form method="GET" action="{{ route('lending.index') }}" class="row g-3">
+                            <div class="col-md-6">
+                                <input type="text" name="search" class="form-control" placeholder="ค้นหาอุปกรณ์"
+                                    value="{{ request()->get('search') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <select name="item_type_id" class="form-control">
+                                    <option value="">{{ __('อุปกรณ์ทั้งหมด') }}</option>
+                                    @foreach ($itemTypes as $itemType)
+                                        <option value="{{ $itemType->id }}"
+                                            {{ request()->get('item_type_id') == $itemType->id ? 'selected' : '' }}>
+                                            {{ $itemType->type_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary">ค้นหา</button>
+                            </div>
+                        </form>
+                    </div>
+
                     @auth
                         @if (Auth::user()->is_admin)
                             <div class="card-body p-3">
@@ -66,10 +90,13 @@
                                         <td>
                                             @auth
                                                 @if (!Auth::user()->is_admin)
-                                                    <a href="{{ route('borrow-item', ['item_id' => $item->id]) }}"
-                                                        class="btn btn-primary">
-                                                        {{ __('ยืม') }}
-                                                    </a>
+                                                    <a href="{{ route('lending.borrow-equipment', [
+                                                        'itemId' => $item->id, // ID ของอุปกรณ์
+                                                        'bookingDate' => $bookingDate, // วันที่ที่จอง
+                                                        'bookingTime' => $bookingTime, // เวลาที่จอง
+                                                        'stadiumId' => $stadiumId, // ID ของสนาม
+                                                    ]) }}"
+                                                        class="btn btn-primary">ยืมอุปกรณ์</a>
                                                 @endif
                                             @else
                                                 <a href="{{ route('login') }}" class="btn btn-primary"
@@ -99,7 +126,32 @@
                                 @endforelse
                             </tbody>
                         </table>
+
+                        <!-- Pagination Links -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                แสดง {{ $items->count() }} รายการจาก {{ $items->total() }}
+                            </div>
+                            <div class="d-flex">
+                                <div class="me-2">
+                                    @if ($items->onFirstPage())
+                                        <button class="btn btn-secondary" disabled>« ก่อนหน้า</button>
+                                    @else
+                                        <a href="{{ $items->previousPageUrl() }}" class="btn btn-primary">« ก่อนหน้า</a>
+                                    @endif
+                                </div>
+
+                                <div>
+                                    @if ($items->hasMorePages())
+                                        <a href="{{ $items->nextPageUrl() }}" class="btn btn-primary">ถัดไป »</a>
+                                    @else
+                                        <button class="btn btn-secondary" disabled>ถัดไป »</button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -174,6 +226,13 @@
                     alert.style.display = 'none'; // ซ่อนข้อความแจ้งเตือน
                 }
             }, 5000); // 5000 milliseconds = 5 seconds
+
+            
         </script>
+        <!-- Include Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+
     @endpush
 @endsection

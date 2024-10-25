@@ -14,9 +14,9 @@ class Borrow extends Model
     // protected $guarded = []; // ทำให้ทุกคอลัมน์สามารถ fill ได้ การลบ protected $guarded และใช้ protected $fillable แทน จะช่วยป้องกันการอัพเดทข้อมูลในคอลัมน์ที่ไม่ต้องการ เช่น id หรือคอลัมน์อื่นที่ไม่ต้องการให้ถูก mass-assigned
     protected $fillable = [
         'borrow_date',
-        'borrow_status',
         'users_id',
         'booking_stadium_id', // คอลัมน์ใหม่ที่เพิ่มเข้ามา
+        'borrow_status'
     ];
 
     // สัมพันธ์กับตาราง Item (ถ้ามีความสัมพันธ์แบบอื่น)
@@ -53,7 +53,6 @@ class BorrowDetail extends Model
         'borrow_quantity',
         'borrow_total_hour',
         'borrow_total_price',
-        'borrow_status',
         'users_id',
         'time_slot_id',
         'stadium_id',

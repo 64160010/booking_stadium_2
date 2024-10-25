@@ -11,11 +11,12 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\PaymentController;
+
 use App\Http\Controllers\BorrowingController;
 use App\Http\Controllers\StadiumController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\LendingController;
+use App\Http\Controllers\PaymentController;
 
 // เส้นทางหลัก
 Route::get('/', function () {
@@ -45,11 +46,9 @@ Route::resource('stadiums', StadiumController::class);
 // การจัดการผู้ใช้
 Route::resource('users', UserController::class);
 
-// การจัดการการชำระเงิน
-Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
 
-// การจัดการการยืม
-Route::get('/borrowings', [BorrowingController::class, 'index'])->name('borrowings.index');
+
+
 
 // เส้นทางที่ต้องการผู้ดูแลระบบ
 Route::group(['middleware' => ['auth', 'is_admin']], function() {
@@ -62,16 +61,20 @@ Route::group(['middleware' => ['auth', 'is_admin']], function() {
 Route::get('/booking', [BookingController::class, 'index'])->name('booking');
 
 // เส้นทางสำหรับการยืมอุปกรณ์
-Route::get('/lending', [LendingController::class, 'index'])->name('lending.index');
+// Route::get('/lending', [LendingController::class, 'index'])->name('lending.index');
+Route::get('/lending/index', [LendingController::class, 'index'])->name('lending.index');
 
 // เส้นทางสำหรับการยืมอุปกรณ์ รองรับพารามิเตอร์วันที่ (เฉพาะผู้ใช้ที่ล็อกอินเท่านั้นที่สามารถยืมได้)
-Route::get('/borrow-item/{item_id}/{date?}', [LendingController::class, 'borrowItem'])
-    ->name('borrow-item')
-    ->middleware('auth');
+// Route::get('/lending/borrow-item/{id}', [LendingController::class, 'borrowItem'])->name('lending.borrow-item')
+//     ->middleware('auth');
+Route::post('/borrow-item', [LendingController::class, 'borrowItem'])->name('borrow.item');
+
+
+
 
 // เส้นทางสำหรับการบันทึกข้อมูลการยืม
-Route::post('/borrow', [LendingController::class, 'storeBorrow'])
-    ->name('borrow-item.store')
+Route::post('/borrow/store', [LendingController::class, 'storeBorrow'])
+    ->name('borrow.store')
     ->middleware('auth');
 
 // เส้นทางการจัดการรายการอุปกรณ์
@@ -94,11 +97,13 @@ Route::get('/lending/borrow-detail', [LendingController::class, 'borrowDetail'])
     ->name('lending.borrow-detail')
     ->middleware('auth'); // เพิ่ม middleware ถ้าต้องการให้ต้องล็อกอิน
 
-Route::delete('/lending/borrow/{id}', [LendingController::class, 'destroyBorrow'])->name('lending.destroyBorrow');
-
-
-// Route::get('/bookingDetail/{id}', [BookingController::class, 'show'])->name('booking.detail');
-Route::delete('/booking/{id}', [BookingController::class, 'destroy'])->name('booking.destroy');
+    Route::delete('/lending/borrow/{id}', [LendingController::class, 'destroyBorrow'])->name('lending.borrow.destroy');
 
 Route::get('/bookingDetail/{id}', [BookingController::class, 'show'])->name('booking.detail');
 Route::post('/confirmBooking/{booking_stadium_id}', [BookingController::class, 'confirmBooking'])->name('confirmBooking');
+
+
+Route::get('/payment-booking/{booking_stadium_id}', [PaymentController::class, 'showPaymentForm'])->name('paymentBooking');
+Route::post('/process-payment', [PaymentController::class, 'processPayment'])->name('processPayment');
+
+Route::get('/history-booking', [PaymentController::class, 'historyBooking'])->name('history.booking');
