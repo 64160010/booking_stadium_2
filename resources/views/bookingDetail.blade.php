@@ -75,18 +75,13 @@
                                 </button>
                             </td>
                             <td>
+                                <button class="btn btn-outline-danger delete-booking" data-id="{{ $group['id'] }}">ลบ</button> <!-- ปุ่มลบ -->
                             </td>
-                            
-                            
-                            
-                            
                         </tr>
-                    @endforeach
-                    
+                        @endforeach
                     </tbody>
                 </table>
-            @else
-                <p>ไม่พบข้อมูลการจอง</p>
+           
             @endif
 
             <!-- แสดงรายละเอียดการยืมด้านล่าง -->
@@ -98,8 +93,6 @@
             <th>สนามที่ใช้</th>
             <th>วันที่ยืม</th>
             <th>ชื่ออุปกรณ์</th>
-            
-          
             <th>เวลา</th>
             <th>ชั่วโมง</th>
             <th>จำนวน</th>
@@ -155,13 +148,7 @@
 </table>
 @endif
 
-
-        
-
-          
-
-
-            <div class="d-flex justify-content-between mt-4">
+    <div class="d-flex justify-content-between mt-4">
                 <button class="btn btn-outline-secondary"
                     onclick="window.location='{{ route('booking') }}'">ย้อนกลับ</button>
                 <div>
@@ -185,28 +172,29 @@
     <script>
         $(document).ready(function() {
             // เมื่อคลิกปุ่มลบการจอง
-            $('.delete-booking').on('click', function(e) {
-                e.preventDefault();
-                var bookingId = $(this).data('id');
-                var row = $('#booking-row-' + bookingId);
+$('.delete-booking').on('click', function(e) {
+    e.preventDefault();
+    var bookingId = $(this).data('id');
+    var row = $('#booking-row-' + bookingId);
 
-                if (confirm('คุณแน่ใจที่จะลบรายการนี้?')) {
-                    $.ajax({
-                        url: '/booking/' + bookingId,
-                        type: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            row.remove();
-                            alert('ลบรายการจองสำเร็จ');
-                        },
-                        error: function(xhr) {
-                            alert('เกิดข้อผิดพลาดในการลบข้อมูล');
-                        }
-                    });
-                }
-            });
+    if (confirm('คุณแน่ใจที่จะลบรายการนี้?')) {
+        $.ajax({
+            url: '/booking/' + bookingId,
+            type: 'DELETE',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                row.remove();
+                alert('ลบรายการจองสำเร็จ');
+            },
+            error: function(xhr) {
+                alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+            }
+        });
+    }
+});
+
 
             // เมื่อคลิกปุ่มลบการยืม
             $('.delete-borrow').on('click', function(e) {

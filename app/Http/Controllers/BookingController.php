@@ -159,7 +159,7 @@ public function show()
         
         return view('bookingDetail', compact('groupedBookingDetails', 'bookingDetails', 'borrowingDetails', 'booking_stadium_id', 'items'));
     } else {
-        $message = 'คุณยังไม่มีรายการจอง ต้องการจองสนามไหม';
+        $message = 'คุณยังไม่มีรายการจอง';
         return view('bookingDetail', compact('message', 'booking_stadium_id'));
     }
 }
