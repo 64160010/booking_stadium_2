@@ -19,6 +19,7 @@
                 <th>จำนวนเงิน</th>
                 <th>วันที่และเวลาโอน</th>
                 <th>สถานะการยืม</th>
+                <th>รายละเอียด</th>
             </tr>
         </thead>
         <tbody>
@@ -39,11 +40,14 @@
                     <td>
                         @if($booking->borrow->isNotEmpty())
                             @foreach($booking->borrow as $borrow)
-                                {{ $borrow->status }}<br>
+                                {{ $borrow->borrow_status }}<br>
                             @endforeach
                         @else
                             ไม่มีการยืม
                         @endif
+                    </td>
+                    <td>
+                        <button>รายการ</button>
                     </td>
                     
                 </tr>

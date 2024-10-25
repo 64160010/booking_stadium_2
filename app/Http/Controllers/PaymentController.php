@@ -68,13 +68,26 @@ class PaymentController extends Controller
     $booking->booking_status = 'รอการตรวจสอบ';
     $booking->save();
 
+    // ตรวจสอบว่ามีรายการยืมอุปกรณ์ที่เชื่อมโยงกับการจองนี้หรือไม่
+$borrowItems = Borrow::where('booking_stadium_id', $request->input('booking_code'))->get();
+if ($borrowItems->isNotEmpty()) {
+    foreach ($borrowItems as $borrow) {
+        $borrow->borrow_status = 'รอการตรวจสอบ'; // เปลี่ยนสถานะการยืมเป็น รอการตรวจสอบ
+        $borrow->save();
+    }
+}
+
+
     return redirect()->route('history.booking')->with('success', 'การชำระเงินถูกบันทึกเรียบร้อยแล้ว');
 }
 
 public function historyBooking()
 {
-    // ดึงข้อมูลการจองของผู้ใช้
-    $bookings = BookingStadium::where('users_id', auth()->id())->with(['payment', 'borrow'])->get();
+    // ดึงข้อมูลการจองของผู้ใช้ที่มีสถานะ 'รอการตรวจสอบ' เท่านั้น
+    $bookings = BookingStadium::where('users_id', auth()->id())
+                    ->where('booking_status', 'รอการตรวจสอบ')
+                    ->with(['payment', 'borrow'])
+                    ->get();
 
     return view('history-booking', compact('bookings'));
 }
