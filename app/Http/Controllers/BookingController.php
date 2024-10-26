@@ -263,6 +263,23 @@ public function showHistoryDetail($booking_stadium_id)
     return view('history-detail', compact('bookingStadium', 'bookingDetails', 'borrowingDetails', 'items', 'groupedBookingDetails'));
 }
 
+public function confirm($id)
+{
+    $booking = BookingStadium::findOrFail($id);
+    $booking->booking_status = 'ชำระเงินแล้ว';
+    $booking->save();
+
+    return redirect()->back()->with('success', 'ยืนยันการชำระเงินเรียบร้อยแล้ว');
+}
+
+public function reject($id)
+{
+    $booking = BookingStadium::findOrFail($id);
+    $booking->booking_status = 'การชำระเงินถูกปฏิเสธ';
+    $booking->save();
+
+    return redirect()->back()->with('success', 'การชำระเงินถูกปฏิเสธเรียบร้อยแล้ว');
+}
 
 
 

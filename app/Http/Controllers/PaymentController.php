@@ -83,14 +83,17 @@ if ($borrowItems->isNotEmpty()) {
     return redirect()->route('history.booking')->with('success', 'การชำระเงินถูกบันทึกเรียบร้อยแล้ว');
 }
 
-public function historyBooking()
+public function historyBooking(Request $request)
 {
     $user = auth()->user();
+    $status = $request->input('status'); // รับค่าจากคำขอ
 
     // ตรวจสอบว่าผู้ใช้เป็น admin หรือไม่
     if ($user->is_admin == 1) {
-        // ดึงข้อมูลการจองของทุกคนที่มีสถานะ 'รอการตรวจสอบ'
-        $bookings = BookingStadium::where('booking_status', 'รอการตรวจสอบ')
+        // ถ้ามีการเลือกสถานะ ให้ดึงข้อมูลตามสถานะนั้น
+        $bookings = BookingStadium::when($status, function ($query) use ($status) {
+                return $query->where('booking_status', $status);
+            })
             ->with(['payment', 'borrow', 'details', 'user'])
             ->get();
     } else {

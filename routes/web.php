@@ -112,4 +112,6 @@ Route::get('/booking/details', [PaymentController::class, 'getBookingDetails'])-
 Route::get('/history-detail/{booking_stadium_id}', [BookingController::class, 'showHistoryDetail'])->name('historyDetail');
 
 
+Route::post('/booking/{id}/confirm', [BookingController::class, 'confirm'])->name('booking.confirm');
+Route::post('/booking/{id}/reject', [BookingController::class, 'reject'])->name('booking.reject');
 
