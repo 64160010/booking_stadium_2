@@ -81,10 +81,18 @@
                             <td>{{ $group['total_quantity'] }}</td>
                             <td>{{ number_format($group['total_price']) }} บาท</td>
                         </tr>
+                    
                     @endforeach
                 @endforeach
+
+              
             </tbody>
+            
         </table>
     @endif
+
+    <div class="mt-4">
+        <a href="{{ route('history.booking') }}" class="btn btn-secondary">ย้อนกลับ</a>
+    </div>
 </div>
 @endsection

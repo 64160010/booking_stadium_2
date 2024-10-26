@@ -16,14 +16,13 @@
             <tr>
                 <th>รหัสการจอง</th>
                 <th>ชื่อผู้จอง</th>
-                
                 <th>จำนวนเงิน</th>
                 <th>วันที่และเวลาโอน</th>
                 <th>สถานะการจอง</th>
                 <th>สถานะการยืม</th>
                 <th>รายละเอียด</th>
                 <th>รูปหลักฐานการโอนเงิน</th>
-
+                <th>ตรวจสอบ</th>  <!-- เพิ่มหัวข้อ ตรวจสอบ -->
             </tr>
         </thead>
         <tbody>
@@ -37,7 +36,6 @@
                             N/A
                         @endif
                     </td>
-                    
                     
                     <td>
                         @if($booking->payment)
@@ -88,13 +86,24 @@
                         @endif
                     </td>
                     
-                    
+                    <td>
+                        <!-- ปุ่มยืนยันและปฏิเสธสำหรับแอดมิน -->
+                        <form action="{{ route('booking', $booking->id) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-success">ยืนยัน</button>
+                        </form>
+                        
+                        <form action="{{ route('booking', $booking->id) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-danger">ปฏิเสธ</button>
+                        </form>
+                    </td>
                     
                 </tr>
             @endforeach
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         </tbody>
     </table>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 @endsection
