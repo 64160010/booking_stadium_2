@@ -85,14 +85,25 @@ if ($borrowItems->isNotEmpty()) {
 
 public function historyBooking()
 {
-    // ดึงข้อมูลการจองของผู้ใช้ที่มีสถานะ 'รอการตรวจสอบ' เท่านั้น
-    $bookings = BookingStadium::where('users_id', auth()->id())
-                    ->where('booking_status', 'รอการตรวจสอบ')
-                    ->with(['payment', 'borrow', 'details'])
-                    ->get();
+    $user = auth()->user();
+
+    // ตรวจสอบว่าผู้ใช้เป็น admin หรือไม่
+    if ($user->is_admin == 1) {
+        // ดึงข้อมูลการจองของทุกคนที่มีสถานะ 'รอการตรวจสอบ'
+        $bookings = BookingStadium::where('booking_status', 'รอการตรวจสอบ')
+            ->with(['payment', 'borrow', 'details', 'user'])
+            ->get();
+    } else {
+        // ดึงข้อมูลการจองของผู้ใช้ทั่วไปที่มีสถานะ 'รอการตรวจสอบ'
+        $bookings = BookingStadium::where('users_id', $user->id)
+            ->where('booking_status', 'รอการตรวจสอบ')
+            ->with(['payment', 'borrow', 'details'])
+            ->get();
+    }
 
     return view('history-booking', compact('bookings'));
 }
+
 
 
 

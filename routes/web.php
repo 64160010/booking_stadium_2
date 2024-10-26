@@ -111,7 +111,5 @@ Route::get('/history-booking', [PaymentController::class, 'historyBooking'])->na
 Route::get('/booking/details', [PaymentController::class, 'getBookingDetails'])->name('booking.details');
 Route::get('/history-detail/{booking_stadium_id}', [BookingController::class, 'showHistoryDetail'])->name('historyDetail');
 
-Route::prefix('admin')->group(function () {
-    Route::get('/admin/history-overview', [BookingController::class, 'showAdminHistoryOverview'])->name('admin.history-overview');
-});
+
 

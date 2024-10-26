@@ -226,14 +226,24 @@ public function showHistoryDetail($booking_stadium_id)
 {
     $userId = auth()->id();
     
-    // ดึงรายการจองที่ตรงกับ booking_stadium_id ที่ส่งเข้ามา และรวมข้อมูลสนาม
-    $bookingStadium = BookingStadium::with('stadium')
-        ->where('id', $booking_stadium_id)
-        ->where('users_id', $userId)
-        ->first();
+    // ตรวจสอบบทบาทผู้ใช้
+    $user = auth()->user();
     
+    if ($user->is_admin == 1) {
+        // สำหรับแอดมิน สามารถดูรายละเอียดการจองของทุกคน
+        $bookingStadium = BookingStadium::with('stadium')
+            ->where('id', $booking_stadium_id)
+            ->first();
+    } else {
+        // สำหรับผู้ใช้ทั่วไป ดูเฉพาะการจองของตัวเอง
+        $bookingStadium = BookingStadium::with('stadium')
+            ->where('id', $booking_stadium_id)
+            ->where('users_id', $userId)
+            ->first();
+    }
+
     if (!$bookingStadium) {
-        return redirect()->route('booking')->with('error', 'ไม่พบข้อมูลการจอง');
+        return redirect()->route('history.booking')->with('error', 'ไม่พบข้อมูลการจอง');
     }
     
     // ดึงรายละเอียดการจองและรวมข้อมูล time_slot
@@ -253,18 +263,8 @@ public function showHistoryDetail($booking_stadium_id)
     return view('history-detail', compact('bookingStadium', 'bookingDetails', 'borrowingDetails', 'items', 'groupedBookingDetails'));
 }
 
-public function showAdminHistoryOverview()
-{
-    // ดึงข้อมูลการจองทั้งหมด
-    $allBookingDetails = BookingDetail::with('stadium', 'timeSlot', 'bookingStadium')
-        ->get();
 
-    // ดึงรายละเอียดการยืมทั้งหมด
-    $allBorrowingDetails = Borrow::with( 'details.item', 'details.timeSlot')
-        ->get();
 
-    return view('admin.history-overview', compact('allBookingDetails', 'allBorrowingDetails'));
-}
 
 
 }
