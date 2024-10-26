@@ -8,6 +8,9 @@ use App\Models\BookingStadium;
 use App\Models\BookingDetail;
 use App\Models\Borrow;
 use App\Models\item;
+use App\Models\TimeSlot;
+
+
 use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
@@ -216,6 +219,51 @@ public function showLendingModal($bookingId)
     $group = Booking::find($id);  // ดึงข้อมูลการจองจากฐานข้อมูล
 
     return view('bookindDetail', compact('booking', 'items','group'));
+}
+
+
+public function showHistoryDetail($booking_stadium_id)
+{
+    $userId = auth()->id();
+    
+    // ดึงรายการจองที่ตรงกับ booking_stadium_id ที่ส่งเข้ามา และรวมข้อมูลสนาม
+    $bookingStadium = BookingStadium::with('stadium')
+        ->where('id', $booking_stadium_id)
+        ->where('users_id', $userId)
+        ->first();
+    
+    if (!$bookingStadium) {
+        return redirect()->route('booking')->with('error', 'ไม่พบข้อมูลการจอง');
+    }
+    
+    // ดึงรายละเอียดการจองและรวมข้อมูล time_slot
+    $bookingDetails = BookingDetail::with('timeSlot')
+        ->where('booking_stadium_id', $booking_stadium_id)
+        ->get();
+
+    // ดึงรายละเอียดการยืม
+    $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
+
+    // ดึงข้อมูลอุปกรณ์ที่สามารถยืมได้
+    $items = Item::all();
+
+    // จัดกลุ่ม bookingDetails (เช่นตาม time_slot หรือ stadium)
+    $groupedBookingDetails = $bookingDetails->groupBy('time_slot_id');
+
+    return view('history-detail', compact('bookingStadium', 'bookingDetails', 'borrowingDetails', 'items', 'groupedBookingDetails'));
+}
+
+public function showAdminHistoryOverview()
+{
+    // ดึงข้อมูลการจองทั้งหมด
+    $allBookingDetails = BookingDetail::with('stadium', 'timeSlot', 'bookingStadium')
+        ->get();
+
+    // ดึงรายละเอียดการยืมทั้งหมด
+    $allBorrowingDetails = Borrow::with( 'details.item', 'details.timeSlot')
+        ->get();
+
+    return view('admin.history-overview', compact('allBookingDetails', 'allBorrowingDetails'));
 }
 
 

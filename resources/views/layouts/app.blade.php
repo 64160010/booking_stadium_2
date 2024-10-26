@@ -26,104 +26,94 @@
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
 
     <style>
-
-/* สไตล์สำหรับปุ่มเข้าสู่ระบบและสมัครสมาชิก */
-.navbar-nav .nav-link {
-    background-color: transparent; /* พื้นหลังโปร่งใส */
-    color: #ffffff; /* ข้อความสีเขียว */
-    border: 2px solid #ffffff; /* กรอบสีเขียว */
-    border-radius: 15px; /* ขอบโค้งมน 15px */
-    padding: 5px 10px; /* เพิ่ม padding เพื่อให้ปุ่มใหญ่ขึ้น */
-    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; /* เพิ่มการเปลี่ยนสี, การเคลื่อนที่ และเงา */
-    display: flex; /* ใช้ flexbox */
-    justify-content: center; /* จัดข้อความให้อยู่กลาง */
-    align-items: center; /* จัดข้อความให้อยู่กลางในแนวตั้ง */
-    min-width: 100px; /* กำหนดความกว้างขั้นต่ำ */
-    height: 40px; /* กำหนดความสูงของปุ่ม */
-    font-weight: 600; /* เพิ่มความหนาของข้อความ */
-    text-align: center; /* จัดข้อความให้อยู่ตรงกลาง */
-}
-
-/* สีพื้นหลังและเอฟเฟกต์เมื่อ hover */
-.navbar-nav .nav-link:hover {
-    background-color: transparent; /* เปลี่ยนสีพื้นหลังเป็นเขียวเมื่อ hover */
-    color: #ffffff; /* เปลี่ยนข้อความเป็นสีขาวเมื่อ hover */
-    border-color: white;
-    transform: translateY(-3px); /* การเคลื่อนที่ขึ้นเล็กน้อยเมื่อ hover */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* เพิ่มเงาเมื่อ hover */
-}
-
-/* เพิ่ม margin ระหว่างปุ่ม */
-.navbar-nav .nav-item {
-    margin-left: 10px; /* เพิ่มระยะห่างระหว่างปุ่ม */
-    margin-bottom:5px;
-}
-
-
-
-        /* ส่วนของ navbar */
+        /* Navbar styling based on user role */
         .navbar-top {
-            background-color: #3f8cdf;
+            background-color: {{ Auth::check() && Auth::user()->is_admin ? '#8b0000' : '#3f8cdf' }};
             padding: 10px 0;
-            
         }
 
+        /* Login and register button styles */
+        .navbar-nav .nav-link {
+            background-color: transparent;
+            color: #ffffff;
+            border: 2px solid #ffffff;
+            border-radius: 15px;
+            padding: 5px 10px;
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 100px;
+            height: 40px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Hover effect for buttons */
+        .navbar-nav .nav-link:hover {
+            background-color: transparent;
+            color: #ffffff;
+            border-color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Margin between buttons */
+        .navbar-nav .nav-item {
+            margin-left: 10px;
+            margin-bottom: 5px;
+        }
+
+        /* Bottom navbar */
         .navbar-bottom {
-        background-color: #ffffff; /* เปลี่ยนเป็นพื้นหลังสีขาว */
-        padding: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* เพิ่มเงา */
-    }
+            background-color: #ffffff;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
 
-    .navbar-bottom a {
-        color: #343a40; /* เปลี่ยนสีตัวอักษรเป็นสีเทาเข้ม */
-        font-size: 16px;
-        text-decoration: none;
-        margin-right: 20px;
-        padding: 8px 12px;
-        border-radius: 5px;
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
-        
-    
-    .navbar-bottom a:hover {
-        background-color: #f8f9fa; /* เปลี่ยนสีพื้นหลังเมื่อ hover */
-        color: #343a40; /* เปลี่ยนสีตัวอักษรเมื่อ hover */
-    }
+        .navbar-bottom a {
+            color: #343a40;
+            font-size: 16px;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
 
-    .navbar-bottom i {
-        margin-right: 8px; /* เว้นระยะระหว่างไอคอนกับข้อความ */
-    }
-    .navbar-brand {
-        font-size: 36px; /* ขนาดตัวอักษรใหญ่ขึ้น */
-        font-weight: bold; /* ตัวอักษรหนา */
-        color: #ffffff; /* สีตัวอักษรเป็นสีขาว */
-        text-decoration: none; /* เอาเส้นใต้ลิงก์ออก */
-        font-family: 'Arial', sans-serif; /* ใช้ฟอนต์ที่ทันสมัย */
-        transition: color 0.3s ease; /* เอฟเฟกต์การเปลี่ยนสีเมื่อ hover */
-    }
+        .navbar-bottom a:hover {
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
 
-    .navbar-brand img {
-        width: 50px; /* ขนาดของโลโก้ใหญ่ขึ้น */
-        height: auto;
-        margin-right: 15px;
-        transition: transform 0.3s ease;
-    
-    }
-    .navbar-brand:hover {
-        color: #ffc107; /* เปลี่ยนสีเป็นสีเหลืองเมื่อ hover */
-    }
+        .navbar-brand {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffffff;
+            text-decoration: none;
+            font-family: 'Arial', sans-serif;
+            transition: color 0.3s ease;
+        }
 
+        .navbar-brand img {
+            width: 50px;
+            height: auto;
+            margin-right: 15px;
+            transition: transform 0.3s ease;
+        }
 
-    .navbar-brand:hover img {
-        transform: scale(1.1); /* ขยายขนาดโลโก้เล็กน้อยเมื่อ hover */
-    }
+        .navbar-brand:hover {
+            color: #ffc107;
+        }
 
-    .navbar-brand span {
-        color: #ffffff; /* สีของตัวอักษรเป็นสีขาว */
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* เพิ่มเงาให้ตัวอักษรเพื่อให้มีมิติมากขึ้น */
-    }
+        .navbar-brand:hover img {
+            transform: scale(1.1);
+        }
 
-
+        .navbar-brand span {
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
     </style>
 
     <!-- Scripts -->
@@ -132,13 +122,12 @@
 
 <body>
     <div id="app">
-        <!-- ส่วนบนของ Navbar -->
+        <!-- Navbar Top Section -->
         <nav class="navbar-top">
             <div class="container d-flex justify-content-between align-items-center">
-                <!-- Brand and Home link -->
                 <a class="navbar-brand d-flex align-items-center" href="{{ route('admin.home') }}">
                     <img src="https://www.svgrepo.com/show/163314/football.svg" alt="Football Icon">
-                    <span>ฟุตบอลคลับ</span>
+                    <span>{{ Auth::check() && Auth::user()->is_admin ? 'การจัดการ ฟุตบอลคลับ' : 'ฟุตบอลคลับ' }}</span>
                 </a>
 
                 <!-- Authentication Links -->
@@ -183,7 +172,7 @@
             </div>
         </nav>
 
-        <!-- ส่วนล่างของ Navbar -->
+        <!-- Navbar Bottom Section -->
         <nav class="navbar-bottom">
             <div class="container d-flex justify-content-start">
                 <a href="{{ route('booking') }}">

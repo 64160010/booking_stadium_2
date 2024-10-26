@@ -30,7 +30,7 @@ class BookingStadium extends Model
 
 public function payment()
 {
-    return $this->hasOne(PaymentBooking::class, 'booking_stadium_id');
+    return $this->hasOne(PaymentBooking::class, 'booking_stadium_id', 'id');
 }
 
 public function borrow()

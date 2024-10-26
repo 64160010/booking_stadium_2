@@ -40,9 +40,11 @@ class PaymentController extends Controller
 
     // จัดการการอัปโหลดไฟล์สลิป
     if ($request->hasFile('transfer_slip')) {
+        // อัปโหลดไฟล์ไปที่ storage/app/public/slips
         $fileName = time() . '.' . $request->transfer_slip->extension();
-        $request->transfer_slip->move(public_path('uploads/slips'), $fileName);
+        $filePath = $request->file('transfer_slip')->storeAs('public/slips', $fileName);
     }
+    
 
     // ตรวจสอบว่ามีการยืมอุปกรณ์ใน booking_stadium_id นี้หรือไม่
     $borrow = Borrow::where('booking_stadium_id', $request->input('booking_code'))->first();
@@ -86,10 +88,14 @@ public function historyBooking()
     // ดึงข้อมูลการจองของผู้ใช้ที่มีสถานะ 'รอการตรวจสอบ' เท่านั้น
     $bookings = BookingStadium::where('users_id', auth()->id())
                     ->where('booking_status', 'รอการตรวจสอบ')
-                    ->with(['payment', 'borrow'])
+                    ->with(['payment', 'borrow', 'details'])
                     ->get();
 
     return view('history-booking', compact('bookings'));
 }
+
+
+
+
 
 }

@@ -36,6 +36,8 @@ class Borrow extends Model
     {
         return $this->hasMany(BorrowDetail::class, 'borrow_id'); 
     }
+
+    
 }
 
 class BorrowDetail extends Model
@@ -86,5 +88,10 @@ class BorrowDetail extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'users_id');
+    }
+
+    public function bookingStadium()
+    {
+        return $this->belongsTo(BookingStadium::class, 'booking_stadium_id');
     }
 }
