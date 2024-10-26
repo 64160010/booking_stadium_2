@@ -32,10 +32,6 @@ Route::get('/admin/home', [HomeController::class, 'adminHome'])
     ->name('admin.home')
     ->middleware(IsAdmin::class);
 
-// เส้นทางของปฏิทิน
-Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
-Route::post('/calendar', [CalendarController::class, 'index']);
-
 // การจัดการโปรไฟล์
 Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
@@ -45,10 +41,6 @@ Route::resource('stadiums', StadiumController::class);
 
 // การจัดการผู้ใช้
 Route::resource('users', UserController::class);
-
-
-
-
 
 // เส้นทางที่ต้องการผู้ดูแลระบบ
 Route::group(['middleware' => ['auth', 'is_admin']], function() {
@@ -68,9 +60,6 @@ Route::get('/lending/index', [LendingController::class, 'index'])->name('lending
 // Route::get('/lending/borrow-item/{id}', [LendingController::class, 'borrowItem'])->name('lending.borrow-item')
 //     ->middleware('auth');
 Route::post('/borrow-item', [LendingController::class, 'borrowItem'])->name('borrow.item');
-
-
-
 
 // เส้นทางสำหรับการบันทึกข้อมูลการยืม
 Route::post('/borrow/store', [LendingController::class, 'storeBorrow'])
@@ -107,3 +96,8 @@ Route::get('/payment-booking/{booking_stadium_id}', [PaymentController::class, '
 Route::post('/process-payment', [PaymentController::class, 'processPayment'])->name('processPayment');
 
 Route::get('/history-booking', [PaymentController::class, 'historyBooking'])->name('history.booking');
+Route::get('/booking-details/{id}', [BookingController::class, 'getBookingDetails']);
+
+// Route สำหรับการลบ booking_detail ทีละรายการ
+Route::delete('/booking-detail/{id}', [BookingController::class, 'destroyBookingDetail'])->name('booking.detail.destroy');
+

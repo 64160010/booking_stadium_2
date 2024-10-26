@@ -40,6 +40,8 @@ public function borrow()
     
 }
 
+
+
 public function stadium() {
     return $this->belongsTo(Stadium::class, 'stadium_id'); // หรือใช้ชื่อฟิลด์ที่ถูกต้อง
 }
