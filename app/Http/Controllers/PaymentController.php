@@ -90,22 +90,25 @@ public function historyBooking(Request $request)
 
     // ตรวจสอบว่าผู้ใช้เป็น admin หรือไม่
     if ($user->is_admin == 1) {
-        // ถ้ามีการเลือกสถานะ ให้ดึงข้อมูลตามสถานะนั้น
+        // ถ้ามีการเลือกสถานะ ให้ดึงข้อมูลตามสถานะนั้น แต่ต้องไม่รวมสถานะ 'รอการชำระเงิน'
         $bookings = BookingStadium::when($status, function ($query) use ($status) {
-                return $query->where('booking_status', $status);
+                return $query->where('booking_status', $status)
+                    ->where('booking_status', '!=', 'รอการชำระเงิน'); // กรองสถานะ 'รอการชำระเงิน'
             })
+            ->where('booking_status', '!=', 'รอการชำระเงิน') // กรองสถานะ 'รอการชำระเงิน'
             ->with(['payment', 'borrow', 'details', 'user'])
             ->get();
     } else {
-        // ดึงข้อมูลการจองของผู้ใช้ทั่วไปที่มีสถานะ 'รอการตรวจสอบ'
+        // ดึงข้อมูลการจองของผู้ใช้ทั่วไปที่มีสถานะไม่เป็น 'รอการชำระเงิน'
         $bookings = BookingStadium::where('users_id', $user->id)
-            ->where('booking_status', 'รอการตรวจสอบ')
+            ->where('booking_status', '!=', 'รอการชำระเงิน') // กรองสถานะ 'รอการชำระเงิน'
             ->with(['payment', 'borrow', 'details'])
             ->get();
     }
 
     return view('history-booking', compact('bookings'));
 }
+
 
 
 

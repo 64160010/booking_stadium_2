@@ -8,7 +8,7 @@
             <button class="btn btn-warning" onclick="filterBookings('รอการตรวจสอบ')">รอการตรวจสอบ</button>
             <button class="btn btn-success" onclick="filterBookings('ชำระเงินแล้ว')">ชำระเงินแล้ว</button>
             <button class="btn btn-danger" onclick="filterBookings('การชำระเงินถูกปฏิเสธ')">การชำระเงินถูกปฏิเสธ</button>
-            <button class="btn btn-secondary" onclick="resetFilters()">แสดงทั้งหมด</button> <!-- เพิ่มปุ่มนี้ -->
+            <button class="btn btn-secondary" onclick="resetFilters()">แสดงทั้งหมด</button>
         @endif
     @endauth
 
@@ -35,7 +35,9 @@
                         <th>ตรวจสอบ</th>
                     @endif
                 @endauth
+              
             </tr>
+         
         </thead>
         <tbody>
             @foreach($bookings as $booking)
