@@ -61,7 +61,7 @@ class BorrowDetail extends Model
     // สัมพันธ์กับตาราง Item
     public function item()
     {
-        return $this->belongsTo(Item::class);
+        return $this->belongsTo(Item::class, 'item_id');
     }
 
     // สัมพันธ์กับตาราง Borrow

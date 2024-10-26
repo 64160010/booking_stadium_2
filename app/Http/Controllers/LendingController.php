@@ -151,102 +151,89 @@ class LendingController extends Controller
 
 
     public function borrowItem(Request $request)
-{
-    // Validate the borrowing data
-    $request->validate([
-        'stadium_id' => 'required|exists:stadium,id',
-        'booking_date' => 'required|date',
-        'item_id' => 'required|array',
-        'item_id.*' => 'exists:item,id',
-        'borrow_quantity' => 'required|array',
-        'borrow_quantity.*' => 'integer|min:0',
-    ]);
-
-    // Retrieve the latest booking stadium for the user
-    $bookingStadium = BookingStadium::where('users_id', auth()->id())
-        ->where('booking_status', 'รอการชำระเงิน')
-        ->latest()
-        ->first();
-
-    if (!$bookingStadium) {
-        return redirect()->back()->withErrors('การจองสนามไม่พบ');
-    }
-
-    // Check if there's an existing borrow linked to the booking stadium
-    $existingBorrow = Borrow::where('users_id', auth()->id())
-        ->where('booking_stadium_id', $bookingStadium->id)
-        ->first();
-
-    // If no borrow exists, create a new one
-    $borrow = $existingBorrow ?: Borrow::create([
-        'borrow_date' => $request->booking_date,
-        'users_id' => auth()->id(),
-        'booking_stadium_id' => $bookingStadium->id,
-        'borrow_status' => 'รอการชำระเงิน',
-    ]);
-
-    // Retrieve booking details for the specified date
-    $bookingDetails = BookingDetail::where('booking_stadium_id', $bookingStadium->id)
-        ->where('booking_date', $request->booking_date)
-        ->get();
-
-    // Loop through each item to create borrow details
-    foreach ($request->item_id as $index => $itemId) {
-        $borrowQuantity = $request->borrow_quantity[$index];
-
-        // Skip if the borrow quantity is 0
-        if ($borrowQuantity == 0) {
-            continue;
+    {
+        $request->validate([
+            'stadium_id' => 'required|exists:stadium,id',
+            'booking_date' => 'required|date',
+            'item_id' => 'required|array',
+            'item_id.*' => 'exists:item,id',
+            'borrow_quantity' => 'required|array',
+            'borrow_quantity.*' => 'integer|min:0',
+        ]);
+    
+        $bookingStadium = BookingStadium::where('users_id', auth()->id())
+            ->where('booking_status', 'รอการชำระเงิน')
+            ->latest()
+            ->first();
+    
+        if (!$bookingStadium) {
+            return redirect()->back()->withErrors('การจองสนามไม่พบ');
         }
-
-        // Check if the item exists
-        $item = Item::find($itemId);
-        if (!$item) {
-            return redirect()->back()->withErrors("Item not found: $itemId.");
-        }
-
-        // Loop through booking details to save time slots
-        foreach ($bookingDetails as $bookingDetail) {
-            if ($bookingDetail->stadium_id == $request->stadium_id) { // Ensure it's the selected stadium
-                $timeSlotId = $bookingDetail->time_slot_id;
-
-                // Calculate the total borrowing price
-                $totalPrice = $item->price * $borrowQuantity;
-
-                // Check if the item has already been borrowed
-                $existingDetail = BorrowDetail::where('borrow_id', $borrow->id)
-                    ->where('item_id', $itemId)
-                    ->where('stadium_id', $bookingDetail->stadium_id)
-                    ->where('borrow_date', $bookingDetail->booking_date)
-                    ->where('time_slot_id', $timeSlotId)
-                    ->first();
-
-                if ($existingDetail) {
-                    // If it exists, update the quantity and total price
-                    $existingDetail->borrow_quantity += $borrowQuantity;
-                    $existingDetail->borrow_total_price += $totalPrice;
-                    $existingDetail->save();
-                } else {
-                    // If it doesn't exist, create a new borrow detail
-                    BorrowDetail::create([
-                        'stadium_id' => $bookingDetail->stadium_id,
-                        'borrow_date' => $bookingDetail->booking_date,
-                        'time_slot_id' => $timeSlotId,
-                        'item_id' => $itemId,
-                        'borrow_quantity' => $borrowQuantity,
-                        'borrow_total_price' => $totalPrice,
-                        'borrow_total_hour' => 0,
-                        'item_item_type_id' => $item->item_type_id,
-                        'borrow_id' => $borrow->id,
-                        'users_id' => auth()->id(),
-                    ]);
+    
+        $borrow = Borrow::firstOrCreate(
+            [
+                'users_id' => auth()->id(),
+                'booking_stadium_id' => $bookingStadium->id,
+                'borrow_date' => $request->booking_date,
+                'borrow_status' => 'รอการชำระเงิน',
+            ]
+        );
+    
+        $bookingDetails = BookingDetail::where('booking_stadium_id', $bookingStadium->id)
+            ->where('booking_date', $request->booking_date)
+            ->get();
+    
+        foreach ($request->item_id as $index => $itemId) {
+            $borrowQuantity = $request->borrow_quantity[$index];
+            
+            if ($borrowQuantity == 0) {
+                continue;
+            }
+    
+            $item = Item::find($itemId);
+            if (!$item) {
+                return redirect()->back()->withErrors("Item not found: $itemId.");
+            }
+    
+            foreach ($bookingDetails as $bookingDetail) {
+                if ($bookingDetail->stadium_id == $request->stadium_id) {
+                    $timeSlotId = $bookingDetail->time_slot_id;
+                    $totalPrice = $item->price * $borrowQuantity;
+    
+                    $existingDetail = BorrowDetail::where('borrow_id', $borrow->id)
+                        ->where('item_id', $itemId)
+                        ->where('stadium_id', $bookingDetail->stadium_id)
+                        ->where('borrow_date', $bookingDetail->booking_date)
+                        ->where('time_slot_id', $timeSlotId)
+                        ->first();
+    
+                    if ($existingDetail) {
+                        $existingDetail->borrow_quantity += $borrowQuantity;
+                        $existingDetail->borrow_total_price += $totalPrice;
+                        $existingDetail->save();
+                    } else {
+                        BorrowDetail::create([
+                            'stadium_id' => $bookingDetail->stadium_id,
+                            'borrow_date' => $bookingDetail->booking_date,
+                            'time_slot_id' => $timeSlotId,
+                            'item_id' => $itemId,
+                            'borrow_quantity' => $borrowQuantity,
+                            'borrow_total_price' => $totalPrice,
+                            'borrow_total_hour' => 0,
+                            'item_item_type_id' => $item->item_type_id,
+                            'borrow_id' => $borrow->id,
+                            'users_id' => auth()->id(),
+                        ]);
+                    }
                 }
             }
         }
+    
+        return redirect()->back()->with('success', 'ยืมอุปกรณ์สำเร็จ');
     }
+    
 
-    return redirect()->back()->with('success', 'ยืมอุปกรณ์สำเร็จ');
-}
+
     
 public function showBookingDetail($id)
 {

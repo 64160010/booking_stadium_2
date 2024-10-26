@@ -100,4 +100,3 @@ Route::get('/booking-details/{id}', [BookingController::class, 'getBookingDetail
 
 // Route สำหรับการลบ booking_detail ทีละรายการ
 Route::delete('/booking-detail/{id}', [BookingController::class, 'destroyBookingDetail'])->name('booking.detail.destroy');
-
