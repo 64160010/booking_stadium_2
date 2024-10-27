@@ -272,14 +272,17 @@ public function confirm($id)
     return redirect()->back()->with('success', 'ยืนยันการชำระเงินเรียบร้อยแล้ว');
 }
 
-public function reject($id)
-{
-    $booking = BookingStadium::findOrFail($id);
-    $booking->booking_status = 'การชำระเงินถูกปฏิเสธ';
-    $booking->save();
+public function reject(Request $request, $id)
+    {
+        $booking = BookingStadium::findOrFail($id);
+        $booking->booking_status = 'การชำระเงินถูกปฏิเสธ';
+        $booking->reject_reason = $request->input('reject_reason');
+        $booking->save();
 
-    return redirect()->back()->with('success', 'การชำระเงินถูกปฏิเสธเรียบร้อยแล้ว');
-}
+        return redirect()->back()->with('success', 'การปฏิเสธการชำระเงินสำเร็จแล้ว');
+    }
+
+
 
 
 
