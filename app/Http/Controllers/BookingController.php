@@ -8,6 +8,9 @@ use App\Models\BookingStadium;
 use App\Models\BookingDetail;
 use App\Models\Borrow;
 use App\Models\item;
+use App\Models\TimeSlot;
+
+
 use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
@@ -111,54 +114,71 @@ class BookingController extends Controller
     
 
 
-    public function show()
-    {
-        $userId = auth()->id();
-        $latestBookingStadium = BookingStadium::where('users_id', $userId)
-            ->where('booking_status', 'รอการชำระเงิน')
-            ->latest()
-            ->first();
-    
-        $booking_stadium_id = $latestBookingStadium ? $latestBookingStadium->id : null;
-    
-        // ตรวจสอบและดึงข้อมูลการจองเฉพาะใน booking_detail
-        $groupedBookingDetails = collect(); // เริ่มต้นให้เป็น collection ว่าง
-    
-        if ($booking_stadium_id) {
-            $bookingDetails = BookingDetail::where('booking_stadium_id', $booking_stadium_id)->get();
-    
-            if ($bookingDetails->isNotEmpty()) {
-                $groupedBookingDetails = $bookingDetails->groupBy(function ($item) {
-                    return $item->stadium_id . '|' . $item->booking_date;
-                })->map(function ($group) use ($latestBookingStadium) {
-                    $timeSlots = $group->pluck('timeSlot.time_slot')->join(', ');
-                    $bookingStatus = $latestBookingStadium->booking_status;
-    
-                    return [
-                        'id' => $group->first()->id, // ใช้ ID ของ booking_detail แทน
-                        'stadium_id' => $group->first()->stadium_id,
-                        'stadium_name' => $group->first()->stadium->stadium_name,
-                        'booking_date' => $group->first()->booking_date,
-                        'time_slots' => $timeSlots,
-                        'total_price' => $group->sum('booking_total_price'),
-                        'total_hours' => $group->sum('booking_total_hour'),
-                        'booking_status' => $bookingStatus,
-                    ];
-                })->values();
-            }
-    
-            $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
-            $items = Item::all();
-    
-            return view('bookingDetail', compact('groupedBookingDetails', 'bookingDetails', 'borrowingDetails', 'booking_stadium_id', 'items'));
-        } else {
-            $message = 'คุณยังไม่มีรายการจอง ต้องการจองสนามไหม';
-            return view('bookingDetail', compact('message', 'booking_stadium_id'));
+public function show()
+{
+    $userId = auth()->id();
+    $latestBookingStadium = BookingStadium::where('users_id', $userId)
+        ->where('booking_status', 'รอการชำระเงิน') // เช็คสถานะการจอง
+        ->latest()
+        ->first();
+        
+    $booking_stadium_id = $latestBookingStadium ? $latestBookingStadium->id : null;
+
+    // เริ่มต้นตัวแปร $borrowingDetails ให้เป็น null
+    $borrowingDetails = null;
+    $item = null; // เริ่มต้น $item ให้เป็น null
+
+    if ($booking_stadium_id) {
+        // ดึงรายละเอียดการจอง
+        $bookingDetails = BookingDetail::where('booking_stadium_id', $booking_stadium_id)->get();
+
+        // เพิ่มตรวจสอบเงื่อนไขถ้ามีรายการจอง
+        if ($bookingDetails->isNotEmpty()) {
+            $groupedBookingDetails = $bookingDetails->groupBy(function ($item) {
+                return $item->stadium_id . '|' . $item->booking_date;
+            })->map(function ($group) use ($latestBookingStadium) {
+                $timeSlots = $group->pluck('timeSlot.time_slot')->join(', ');
+                $bookingStatus = $latestBookingStadium->booking_status;
+
+                return [
+                    'id' => $group->first()->booking_stadium_id, 
+                    'stadium_id' => $group->first()->stadium_id,
+                    'stadium_name' => $group->first()->stadium->stadium_name,
+                    'booking_date' => $group->first()->booking_date,
+                    'time_slots' => $timeSlots,
+                    'total_price' => $group->sum('booking_total_price'),
+                    'total_hours' => $group->sum('booking_total_hour'),
+                    'booking_status' => $bookingStatus,
+                ];
+            })->values();
         }
+
+        // ดึงรายละเอียดการยืม
+        $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
+
+        // ดึงข้อมูลอุปกรณ์ที่สามารถยืมได้ (ต้องมีการกำหนดเงื่อนไขให้ตรงกับฐานข้อมูลของคุณ)
+        $items = Item::all(); // ใช้ชื่อให้ตรงกับชื่อของโมเดล (Items คือ อุปกรณ์หลายตัว) // ตัวอย่างการดึงข้อมูลอุปกรณ์ตัวแรก
+
+        
+        return view('bookingDetail', compact('groupedBookingDetails', 'bookingDetails', 'borrowingDetails', 'booking_stadium_id', 'items'));
+    } else {
+        $message = 'คุณยังไม่มีรายการจอง';
+        return view('bookingDetail', compact('message', 'booking_stadium_id'));
+    }
+}
+
+
+
+public function destroy($id)
+{
+    $booking = BookingStadium::find($id);
+    if ($booking) {
+        $booking->delete();
+        return response()->json(['success' => true, 'message' => 'ลบการจองสำเร็จ']);
     }
 
-
-
+    return response()->json(['success' => false, 'message' => 'ไม่พบการจอง']);
+}
 
 
 public function confirmBooking($booking_stadium_id)
@@ -201,16 +221,68 @@ public function showLendingModal($bookingId)
     return view('bookindDetail', compact('booking', 'items','group'));
 }
 
-public function destroyBookingDetail($id)
+
+public function showHistoryDetail($booking_stadium_id)
 {
-    $bookingDetail = BookingDetail::find($id); // ลบรายการเฉพาะใน booking_detail
-    if ($bookingDetail) {
-        $bookingDetail->delete();
-        return response()->json(['success' => true, 'message' => 'ลบรายละเอียดการจองสำเร็จ']);
+    $userId = auth()->id();
+    
+    // ตรวจสอบบทบาทผู้ใช้
+    $user = auth()->user();
+    
+    if ($user->is_admin == 1) {
+        // สำหรับแอดมิน สามารถดูรายละเอียดการจองของทุกคน
+        $bookingStadium = BookingStadium::with('stadium')
+            ->where('id', $booking_stadium_id)
+            ->first();
+    } else {
+        // สำหรับผู้ใช้ทั่วไป ดูเฉพาะการจองของตัวเอง
+        $bookingStadium = BookingStadium::with('stadium')
+            ->where('id', $booking_stadium_id)
+            ->where('users_id', $userId)
+            ->first();
     }
 
-    return response()->json(['success' => false, 'message' => 'ไม่พบรายละเอียดการจอง']);
+    if (!$bookingStadium) {
+        return redirect()->route('history.booking')->with('error', 'ไม่พบข้อมูลการจอง');
+    }
+    
+    // ดึงรายละเอียดการจองและรวมข้อมูล time_slot
+    $bookingDetails = BookingDetail::with('timeSlot')
+        ->where('booking_stadium_id', $booking_stadium_id)
+        ->get();
+
+    // ดึงรายละเอียดการยืม
+    $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
+
+    // ดึงข้อมูลอุปกรณ์ที่สามารถยืมได้
+    $items = Item::all();
+
+    // จัดกลุ่ม bookingDetails (เช่นตาม time_slot หรือ stadium)
+    $groupedBookingDetails = $bookingDetails->groupBy('time_slot_id');
+
+    return view('history-detail', compact('bookingStadium', 'bookingDetails', 'borrowingDetails', 'items', 'groupedBookingDetails'));
 }
+
+public function confirm($id)
+{
+    $booking = BookingStadium::findOrFail($id);
+    $booking->booking_status = 'ชำระเงินแล้ว';
+    $booking->save();
+
+    return redirect()->back()->with('success', 'ยืนยันการชำระเงินเรียบร้อยแล้ว');
+}
+
+public function reject(Request $request, $id)
+    {
+        $booking = BookingStadium::findOrFail($id);
+        $booking->booking_status = 'การชำระเงินถูกปฏิเสธ';
+        $booking->reject_reason = $request->input('reject_reason');
+        $booking->save();
+
+        return redirect()->back()->with('success', 'การปฏิเสธการชำระเงินสำเร็จแล้ว');
+    }
+
+
 
 
 

@@ -1,7 +1,17 @@
 @extends('layouts.app')
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
 @section('content')
 <div class="container">
+    @auth
+        @if (Auth::user()->is_admin)
+            <button class="btn btn-warning" onclick="filterBookings('รอการตรวจสอบ')">รอการตรวจสอบ</button>
+            <button class="btn btn-success" onclick="filterBookings('ชำระเงินแล้ว')">ชำระเงินแล้ว</button>
+            <button class="btn btn-danger" onclick="filterBookings('การชำระเงินถูกปฏิเสธ')">การชำระเงินถูกปฏิเสธ</button>
+            <button class="btn btn-secondary" onclick="resetFilters()">แสดงทั้งหมด</button>
+        @endif
+    @endauth
+
     <h2 class="text-center mb-4">ประวัติการจองและการยืม</h2>
 
     @if(session('success'))
@@ -15,137 +25,110 @@
             <tr>
                 <th>รหัสการจอง</th>
                 <th>ชื่อผู้จอง</th>
-                <th>สถานะการจอง</th>
                 <th>จำนวนเงิน</th>
                 <th>วันที่และเวลาโอน</th>
-                <th>สถานะการยืม</th>
+                <th>สถานะการชำระเงิน</th>
                 <th>รายละเอียด</th>
+                <th>รูปหลักฐานการโอนเงิน</th>
+                
+                @auth
+                    @if (!Auth::user()->is_admin)
+                        
+                            <th>หมายเหตุ</th> <!-- เปลี่ยนชื่อคอลัมน์เป็น "หมายเหตุ" สำหรับสถานะถูกปฏิเสธ -->
+                    @endif
+                @endauth
+                @auth
+                    @if (Auth::user()->is_admin)
+                        @if (request('status') == 'การชำระเงินถูกปฏิเสธ')
+                            <th>หมายเหตุ</th> <!-- เปลี่ยนชื่อคอลัมน์เป็น "หมายเหตุ" สำหรับสถานะถูกปฏิเสธ -->
+                        @else
+                            <th>ตรวจสอบ</th>
+                        @endif
+                    @endif
+                @endauth
             </tr>
         </thead>
         <tbody>
             @foreach($bookings as $booking)
-                <tr>
-                    <td>{{ $booking->id }}</td>
-                    <td>{{ $booking->payer_name }}</td>
-                    <td>{{ $booking->booking_status }}</td>
-                    <td>
-                        @if($booking->payment)
-                            {{ number_format($booking->payment->amount, 2) }}
-                        @else
-                            N/A
-                        @endif
-                    </td>
-                    
-                    <td>{{ $booking->payment->transfer_datetime ?? 'N/A' }}</td>
-                    <td>
-                        @if($booking->borrow->isNotEmpty())
-                            @foreach($booking->borrow as $borrow)
-                                {{ $borrow->borrow_status }}<br>
-                            @endforeach
-                        @else
-                            ไม่มีการยืม
-                        @endif
-                    </td>
-                    <td>
-                        <!-- ปุ่มแสดง Modal -->
-                        <button type="button" class="btn btn-primary" data-toggle="modal" 
-                                data-target="#detailsModal" 
-                                data-booking="{{ json_encode($booking) }}">รายการ</button>
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+            <tr class="{{ $booking->booking_status }}">
+                <td>{{ $booking->id }}</td>
+                <td>{{ $booking->payment ? $booking->payment->payer_name : 'N/A' }}</td>
+                <td>{{ $booking->payment ? number_format($booking->payment->amount, 2) : 'N/A' }}</td>
+                <td>{{ $booking->payment->transfer_datetime ?? 'N/A' }}</td>
+                <td>{{ $booking->booking_status }}
+                <td>
+                    <a href="{{ route('historyDetail', $booking->id) }}" class="btn btn-primary">รายการ</a>
+                </td>
+                <td>
+                    @if($booking->payment && $booking->payment->confirmation_pic)
+                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#paymentSlipModal{{ $booking->id }}">
+                            ดูหลักฐาน
+                        </button>
+                        <div class="modal fade" id="paymentSlipModal{{ $booking->id }}" tabindex="-1" aria-labelledby="paymentSlipModalLabel{{ $booking->id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="paymentSlipModalLabel{{ $booking->id }}">หลักฐานการโอนเงิน</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img src="{{ asset('storage/slips/' . $booking->payment->confirmation_pic) }}" alt="Confirmation Image" style="width: 100%; height: auto;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        N/A
+                    @endif
+                </td>
+                <td>
+                @auth
+                    @if (Auth::user()->is_admin && $booking->booking_status != 'การชำระเงินถูกปฏิเสธ')
+                        <form action="{{ route('booking.confirm', $booking->id) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-success">ยืนยัน</button>
+                        </form>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $booking->id }}">ปฏิเสธ</button>
+                        <div class="modal fade" id="rejectModal{{ $booking->id }}" tabindex="-1" aria-labelledby="rejectModalLabel{{ $booking->id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="rejectModalLabel{{ $booking->id }}">เหตุผลที่ปฏิเสธการชำระเงิน</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="{{ route('booking.reject', $booking->id) }}" method="POST">
+                                            @csrf
+                                            <div class="form-group">
+                                                <label for="reject_reason">หมายเหตุ (ไม่เกิน 20 ตัวอักษร):</label>
+                                                <input type="text" name="reject_reason" class="form-control" maxlength="20" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-danger mt-3">ปฏิเสธ</button>
+                                        </form>
+                                    </td>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @elseif ($booking->booking_status == 'การชำระเงินถูกปฏิเสธ')
+                        <small> {{ $booking->reject_reason ?? 'ไม่มีเหตุผล' }}</small>
+                    @endif
+                @endauth
+            </tr>
+        @endforeach
+    </tbody>
+</table>
 </div>
 
-<!-- Modal สำหรับแสดงรายละเอียด -->
-<div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="detailsModalLabel">รายละเอียดการจองและการยืม</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <!-- รายละเอียดการจอง -->
-                <h5>รายละเอียดการจอง</h5>
-                <p><strong>รหัสการจอง:</strong> <span id="modal-booking-id"></span></p>
-                <p><strong>สนามที่จอง:</strong> <span id="modal-stadium-name"></span></p>
-                <p><strong>เวลาที่จอง:</strong> <span id="modal-booking-date"></span></p>
-                <p><strong>ช่วงเวลาที่จอง:</strong> <span id="modal-time-slot"></span></p>
-                <p><strong>ราคา:</strong> <span id="modal-booking-price"></span></p>
-                <p><strong>ชั่วโมงรวม:</strong> <span id="modal-total-hours"></span></p>
-
-                <!-- รายละเอียดการยืมอุปกรณ์ -->
-                <h5>รายละเอียดการยืมอุปกรณ์</h5>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>รหัสอุปกรณ์</th>
-                            <th>อุปกรณ์ที่ยืม</th>
-                            <th>ประเภทอุปกรณ์</th>
-                            <th>ราคา</th>
-                            <th>จำนวน</th>
-                            <th>ราคารวม</th>
-                            <th>วันที่ยืม</th>
-                            <th>ช่วงเวลาที่ยืม</th>
-                        </tr>
-                    </thead>
-                    <tbody id="modal-borrow-details">
-                        <!-- ข้อมูลการยืมจะถูกเติมที่นี่ด้วย JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">ปิด</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        $('#detailsModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget); // ปุ่มที่กดเพื่อแสดง modal
-            var booking = button.data('booking'); // ดึงข้อมูล booking จากปุ่มที่กด
+    function filterBookings(status) {
+        window.location.href = `?status=${status}`; // ส่งคำขอไปยังเซิร์ฟเวอร์
+    }
 
-            // แสดงรายละเอียดการจอง
-            $('#modal-booking-id').text(booking.id);
-            $('#modal-stadium-name').text(booking.stadium_name);
-            $('#modal-booking-date').text(booking.booking_date);
-            $('#modal-time-slot').text(booking.time_slot);
-            $('#modal-booking-price').text(booking.price);
-            $('#modal-total-hours').text(booking.total_hours);
-
-            // ล้างข้อมูลการยืมอุปกรณ์ก่อนเติมข้อมูลใหม่
-            $('#modal-borrow-details').empty();
-
-            // แสดงรายละเอียดการยืมอุปกรณ์ (ถ้ามี)
-            if (booking.borrow && booking.borrow.length > 0) {
-                booking.borrow.forEach(function(borrow) {
-                    var row = '<tr>' +
-                        '<td>' + borrow.item_id + '</td>' +
-                        '<td>' + borrow.item_name + '</td>' +
-                        '<td>' + borrow.item_type + '</td>' +
-                        '<td>' + borrow.item_price + '</td>' +
-                        '<td>' + borrow.item_quantity + '</td>' +
-                        '<td>' + borrow.item_total_price + '</td>' +
-                        '<td>' + borrow.borrow_date + '</td>' +
-                        '<td>' + borrow.time_slot + '</td>' +
-                        '</tr>';
-                    $('#modal-borrow-details').append(row);
-                });
-            } else {
-                $('#modal-borrow-details').append('<tr><td colspan="8">ไม่มีการยืม</td></tr>');
-            }
-        });
-    });
+    function resetFilters() {
+        window.location.href = '?'; // รีเซ็ตฟิลเตอร์โดยกลับไปที่หน้าเริ่มต้น
+    }
 </script>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-
 @endsection

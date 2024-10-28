@@ -19,6 +19,6 @@ class Stadium extends Model
 
     public function timeSlots()
     {
-        return $this->hasMany(TimeSlot::class, 'stadium_id');
+        return $this->hasMany(TimeSlot::class, 'stadium_id', 'id');
     }
 }
