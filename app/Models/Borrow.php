@@ -72,11 +72,16 @@ class BorrowDetail extends Model
         return $this->belongsTo(Borrow::class, 'borrow_id');
     }
 
-    // สัมพันธ์กับตาราง TimeSlot
-    public function timeSlot()
-    {
-        return $this->belongsTo(TimeSlot::class, 'time_slot_id');
-    }
+   // สัมพันธ์กับตาราง TimeSlot (ชื่อฟังก์ชันปรับเป็น timeSlots)
+public function timeSlots()
+{
+    // แยก time_slot_id ออกมาเป็น array
+    $timeSlotIds = explode(',', $this->time_slot_id);
+
+    // ใช้ Eloquent ดึงข้อมูล TimeSlot ตาม time_slot_id
+    return TimeSlot::whereIn('id', $timeSlotIds)->get();
+}
+
 
     // สัมพันธ์กับตาราง Stadium
     public function stadium()

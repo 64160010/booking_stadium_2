@@ -149,7 +149,6 @@ class LendingController extends Controller
         return redirect()->route('lending.index')->with('success', 'ลบอุปกรณ์สำเร็จ!');
     }
 
-
     public function borrowItem(Request $request)
     {
         $request->validate([
@@ -195,42 +194,46 @@ class LendingController extends Controller
                 return redirect()->back()->withErrors("Item not found: $itemId.");
             }
     
+            $timeSlotIds = [];
             foreach ($bookingDetails as $bookingDetail) {
                 if ($bookingDetail->stadium_id == $request->stadium_id) {
-                    $timeSlotId = $bookingDetail->time_slot_id;
-                    $totalPrice = $item->price * $borrowQuantity;
-    
-                    $existingDetail = BorrowDetail::where('borrow_id', $borrow->id)
-                        ->where('item_id', $itemId)
-                        ->where('stadium_id', $bookingDetail->stadium_id)
-                        ->where('borrow_date', $bookingDetail->booking_date)
-                        ->where('time_slot_id', $timeSlotId)
-                        ->first();
-    
-                    if ($existingDetail) {
-                        $existingDetail->borrow_quantity += $borrowQuantity;
-                        $existingDetail->borrow_total_price += $totalPrice;
-                        $existingDetail->save();
-                    } else {
-                        BorrowDetail::create([
-                            'stadium_id' => $bookingDetail->stadium_id,
-                            'borrow_date' => $bookingDetail->booking_date,
-                            'time_slot_id' => $timeSlotId,
-                            'item_id' => $itemId,
-                            'borrow_quantity' => $borrowQuantity,
-                            'borrow_total_price' => $totalPrice,
-                            'borrow_total_hour' => 0,
-                            'item_item_type_id' => $item->item_type_id,
-                            'borrow_id' => $borrow->id,
-                            'users_id' => auth()->id(),
-                        ]);
-                    }
+                    $timeSlotIds[] = $bookingDetail->time_slot_id;
                 }
+            }
+    
+            $timeSlotIdsStr = implode(',', $timeSlotIds); // แปลงเป็น string เช่น "293,294,295"
+            $totalPrice = $item->price * $borrowQuantity;
+    
+            $existingDetail = BorrowDetail::where('borrow_id', $borrow->id)
+                ->where('item_id', $itemId)
+                ->where('stadium_id', $request->stadium_id)
+                ->where('borrow_date', $request->booking_date)
+                ->first();
+    
+            if ($existingDetail) {
+                $existingTimeSlots = explode(',', $existingDetail->time_slot_id);
+                $newTimeSlots = array_unique(array_merge($existingTimeSlots, $timeSlotIds));
+                $existingDetail->time_slot_id = implode(',', $newTimeSlots);
+                $existingDetail->save();
+            } else {
+                BorrowDetail::create([
+                    'stadium_id' => $request->stadium_id,
+                    'borrow_date' => $request->booking_date,
+                    'time_slot_id' => $timeSlotIdsStr,
+                    'item_id' => $itemId,
+                    'borrow_quantity' => $borrowQuantity,
+                    'borrow_total_price' => $totalPrice,
+                    'borrow_total_hour' => 0,
+                    'item_item_type_id' => $item->item_type_id,
+                    'borrow_id' => $borrow->id,
+                    'users_id' => auth()->id(),
+                ]);
             }
         }
     
         return redirect()->back()->with('success', 'ยืมอุปกรณ์สำเร็จ');
     }
+    
     
 
 

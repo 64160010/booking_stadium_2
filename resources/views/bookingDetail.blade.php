@@ -83,8 +83,8 @@
            
             @endif
 
-            <!-- แสดงรายละเอียดการยืมด้านล่าง -->
-            @if (isset($borrowingDetails) && $borrowingDetails->isNotEmpty())
+<!-- แสดงรายละเอียดการยืมด้านล่าง -->
+@if (isset($borrowingDetails) && $borrowingDetails->isNotEmpty())
 <h2 class="mt-5">รายละเอียดการยืมอุปกรณ์</h2>
 <table class="table table-bordered table-striped">
     <thead class="table-light">
@@ -102,26 +102,22 @@
     <tbody>
         @foreach ($borrowingDetails as $borrow)
             @php
-                $groupedDetails = []; // สร้าง array สำหรับเก็บรายละเอียดที่กลุ่ม
+                $groupedDetails = [];
                 foreach ($borrow->details as $detail) {
-                    $key = $detail->item->id . '-' . $detail->stadium->id . '-' . $borrow->borrow_date; // สร้างคีย์สำหรับกลุ่ม
+                    $key = $detail->item->id . '-' . $detail->stadium->id . '-' . $borrow->borrow_date;
                     if (!isset($groupedDetails[$key])) {
                         $groupedDetails[$key] = [
                             'borrow' => $borrow,
                             'item_name' => $detail->item->item_name,
                             'stadium_name' => $detail->stadium->stadium_name,
-                            'time_slots' => [$detail->timeSlot ? $detail->timeSlot->time_slot : 'ไม่มีข้อมูลเวลา'], // ใช้ array เพื่อเก็บช่วงเวลา
+                            'time_slots' => $detail->timeSlots()->pluck('time_slot')->toArray(), // เรียกใช้ timeSlots()
                             'total_quantity' => $detail->borrow_quantity,
                             'total_price' => $detail->borrow_total_price,
                         ];
                     } else {
-                        // ถ้าซ้ำ ให้เพิ่มจำนวนและราคา
                         $groupedDetails[$key]['total_quantity'] += $detail->borrow_quantity;
                         $groupedDetails[$key]['total_price'] += $detail->borrow_total_price;
-                        // รวมช่วงเวลาทั้งหมด
-                        if ($detail->timeSlot) {
-                            $groupedDetails[$key]['time_slots'][] = $detail->timeSlot->time_slot;
-                        }
+                        $groupedDetails[$key]['time_slots'] = array_merge($groupedDetails[$key]['time_slots'], $detail->timeSlots()->pluck('time_slot')->toArray());
                     }
                 }
             @endphp
@@ -131,9 +127,7 @@
                     <td>{{ $group['stadium_name'] }}</td>
                     <td>{{ $group['borrow']->borrow_date }}</td>
                     <td>{{ $group['item_name'] }}</td>
-                    
-                    
-                    <td>{{ implode(', ', $group['time_slots']) }}</td> <!-- รวมช่วงเวลาเป็น string -->
+                    <td>{{ implode(', ', $group['time_slots']) }}</td> <!-- แสดงช่วงเวลาที่แท้จริง -->
                     <td></td>
                     <td>{{ $group['total_quantity'] }}</td>
                     <td>{{ number_format($group['total_price']) }} บาท</td>
@@ -146,6 +140,9 @@
     </tbody>
 </table>
 @endif
+
+            
+            
 
     <div class="d-flex justify-content-between mt-4">
                 <button class="btn btn-outline-secondary"
