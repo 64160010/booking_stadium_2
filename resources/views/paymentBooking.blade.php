@@ -36,6 +36,7 @@
             <!-- Right Column: Payment Form -->
             <div class="col-md-6">
                 <h2 class="text-center mb-4">แจ้งการชำระเงิน</h2>
+                
                 <form action="{{ route('processPayment') }}" method="POST" enctype="multipart/form-data" class="shadow-lg p-4 rounded">
                     @csrf
 
