@@ -268,8 +268,6 @@
                         <p><strong>ช่วงเวลาที่จองและยืม:</strong> <span id="time_slots_display"></span></p>
                     </div>
                     
-                    
-
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead class="bg-primary text-white">
@@ -301,11 +299,11 @@
                                     </td>
                                     <td>{{ $item->itemType->type_name }}</td>
                                     <td>{{ $item->price }} บาท</td>
-                                    <td>{{ $item->borrowed_quantity }}</td>
-                                    <td>{{ $item->repair_quantity }}</td>
+                                    <td>{{ $item->borrowedQuantity() }}</td>
+
+                                    <td>{{ $item->repair_quantity}}</td>
                                     <td>{{ $item->item_quantity }}</td>
                                     <td>
-                                        <!-- Include a hidden field for the item ID -->
                                         <input type="hidden" name="item_id[]" value="{{ $item->id }}">
                                         <input type="number" name="borrow_quantity[]" min="0" value="0" 
                                                max="{{ $item->item_quantity - $item->borrowed_quantity - $item->repair_quantity }}"
@@ -317,9 +315,7 @@
                                     <td colspan="9" class="text-center">{{ __('ไม่พบรายการอุปกรณ์') }}</td>
                                 </tr>
                             @endforelse
-                            
-
-                            </tbody>
+                        </tbody>
                         </table>
                     </div>
                 </form>
@@ -331,6 +327,7 @@
         </div>
     </div>
 </div>
+
 
 
 

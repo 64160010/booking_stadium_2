@@ -54,6 +54,15 @@ class Item extends Model
         });
     }
     
+
+    public function borrowedQuantity()
+{
+    return BorrowDetail::where('item_id', $this->id)
+        ->whereHas('borrow', function($query) {
+            $query->where('borrow_status', 'รอการตรวจสอบ');
+        })
+        ->sum('borrow_quantity');
+}
 }
 
 
