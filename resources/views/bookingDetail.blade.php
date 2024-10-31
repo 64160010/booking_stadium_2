@@ -83,7 +83,8 @@
            
             @endif
 
-<!-- แสดงรายละเอียดการยืมด้านล่าง -->
+            <!-- แสดงรายละเอียดการยืมด้านล่าง -->
+           <!-- แสดงรายละเอียดการยืมด้านล่าง -->
 @if (isset($borrowingDetails) && $borrowingDetails->isNotEmpty())
 <h2 class="mt-5">รายละเอียดการยืมอุปกรณ์</h2>
 <table class="table table-bordered table-striped">
@@ -141,8 +142,6 @@
 </table>
 @endif
 
-            
-            
 
     <div class="d-flex justify-content-between mt-4">
                 <button class="btn btn-outline-secondary"
@@ -304,7 +303,7 @@
                                     <td>{{ $item->price }} บาท</td>
                                     <td>{{ $item->borrowed_quantity }}</td>
                                     <td>{{ $item->repair_quantity }}</td>
-                                    <td>{{ $item->borrow_quantity - $item->borrowed_quantity - $item->repair_quantity }}</td>
+                                    <td>{{ $item->item_quantity }}</td>
                                     <td>
                                         <!-- Include a hidden field for the item ID -->
                                         <input type="hidden" name="item_id[]" value="{{ $item->id }}">
