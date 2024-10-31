@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\PaymentBooking;
 use App\Models\BookingStadium;
 use App\Models\Borrow;
+use App\Models\BorrowDetail;
+use App\Models\Item;
 
 class PaymentController extends Controller
 {
@@ -24,10 +26,10 @@ class PaymentController extends Controller
         ]);
     }
     
-    // ประมวลผลการชำระเงิน
-    public function processPayment(Request $request)
-    {
-         // ตรวจสอบข้อมูลที่รับมา
+   // ประมวลผลการชำระเงิน
+public function processPayment(Request $request)
+{
+    // ตรวจสอบข้อมูลที่รับมา
     $validatedData = $request->validate([
         'booking_code' => 'required|exists:booking_stadium,id',
         'payer_name' => 'required|string|max:255',
@@ -44,7 +46,6 @@ class PaymentController extends Controller
         $fileName = time() . '.' . $request->transfer_slip->extension();
         $filePath = $request->file('transfer_slip')->storeAs('public/slips', $fileName);
     }
-    
 
     // ตรวจสอบว่ามีการยืมอุปกรณ์ใน booking_stadium_id นี้หรือไม่
     $borrow = Borrow::where('booking_stadium_id', $request->input('booking_code'))->first();
@@ -71,17 +72,36 @@ class PaymentController extends Controller
     $booking->save();
 
     // ตรวจสอบว่ามีรายการยืมอุปกรณ์ที่เชื่อมโยงกับการจองนี้หรือไม่
-$borrowItems = Borrow::where('booking_stadium_id', $request->input('booking_code'))->get();
-if ($borrowItems->isNotEmpty()) {
-    foreach ($borrowItems as $borrow) {
-        $borrow->borrow_status = 'รอการตรวจสอบ'; // เปลี่ยนสถานะการยืมเป็น รอการตรวจสอบ
-        $borrow->save();
+    $borrowItems = Borrow::where('booking_stadium_id', $request->input('booking_code'))->get();
+    if ($borrowItems->isNotEmpty()) {
+        foreach ($borrowItems as $borrow) {
+            $borrow->borrow_status = 'รอการตรวจสอบ'; // เปลี่ยนสถานะการยืมเป็น รอการตรวจสอบ
+            $borrow->save();
+        }
     }
-}
 
+    // ดึงข้อมูลการยืมอุปกรณ์ที่เกี่ยวข้องกับการจองนี้
+    $borrowDetails = BorrowDetail::whereIn('borrow_id', $borrowItems->pluck('id'))->get();
+
+    foreach ($borrowDetails as $borrowDetail) {
+        $item = Item::find($borrowDetail->item_id);
+
+        if ($item) {
+            // ลดจำนวนอุปกรณ์ตามจำนวนที่ยืมใน borrow_detail
+            $item->item_quantity -= $borrowDetail->borrow_quantity;
+
+            // ตรวจสอบไม่ให้ยอดคงเหลือติดลบ
+            if ($item->item_quantity < 0) {
+                return redirect()->back()->withErrors("จำนวนอุปกรณ์ในสต็อกไม่เพียงพอสำหรับการยืม: {$item->name}");
+            }
+
+            $item->save();
+        }
+    }
 
     return redirect()->route('history.booking')->with('success', 'การชำระเงินถูกบันทึกเรียบร้อยแล้ว');
 }
+
 
 public function historyBooking(Request $request)
 {
