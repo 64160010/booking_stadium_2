@@ -116,26 +116,25 @@ class BookingController extends Controller
     
     
 
-
 public function show()
 {
     $userId = auth()->id();
     $latestBookingStadium = BookingStadium::where('users_id', $userId)
-        ->where('booking_status', 'รอการชำระเงิน') // เช็คสถานะการจอง
+        ->where('booking_status', 'รอการชำระเงิน')
         ->latest()
         ->first();
-        
+
     $booking_stadium_id = $latestBookingStadium ? $latestBookingStadium->id : null;
 
-    // เริ่มต้นตัวแปร $borrowingDetails ให้เป็น null
     $borrowingDetails = null;
-    $item = null; // เริ่มต้น $item ให้เป็น null
+    $item = null;
+    $totalOverallBookingPrice = 0;  // Initialize here
+    $totalOverallBorrowingPrice = 0; // Initialize here
 
     if ($booking_stadium_id) {
         // ดึงรายละเอียดการจอง
         $bookingDetails = BookingDetail::where('booking_stadium_id', $booking_stadium_id)->get();
 
-        // เพิ่มตรวจสอบเงื่อนไขถ้ามีรายการจอง
         if ($bookingDetails->isNotEmpty()) {
             $groupedBookingDetails = $bookingDetails->groupBy(function ($item) {
                 return $item->stadium_id . '|' . $item->booking_date;
@@ -144,7 +143,7 @@ public function show()
                 $bookingStatus = $latestBookingStadium->booking_status;
 
                 return [
-                    'id' => $group->first()->booking_stadium_id, 
+                    'id' => $group->first()->booking_stadium_id,
                     'stadium_id' => $group->first()->stadium_id,
                     'stadium_name' => $group->first()->stadium->stadium_name,
                     'booking_date' => $group->first()->booking_date,
@@ -154,22 +153,25 @@ public function show()
                     'booking_status' => $bookingStatus,
                 ];
             })->values();
-        }
 
-        // ดึงรายละเอียดการยืม
+            // คำนวณยอดรวมการจอง
+            $totalOverallBookingPrice = $bookingDetails->sum('booking_total_price');
+        } // Else will keep $totalOverallBookingPrice = 0
+
         $borrowingDetails = Borrow::where('booking_stadium_id', $booking_stadium_id)->get();
+        $totalOverallBorrowingPrice = $borrowingDetails->sum('total_price'); // ปรับการคำนวณยอดรวม
 
-        // ดึงข้อมูลอุปกรณ์ที่สามารถยืมได้ (ต้องมีการกำหนดเงื่อนไขให้ตรงกับฐานข้อมูลของคุณ)
-        $items = Item::all(); // ใช้ชื่อให้ตรงกับชื่อของโมเดล (Items คือ อุปกรณ์หลายตัว) // ตัวอย่างการดึงข้อมูลอุปกรณ์ตัวแรก
+        $items = Item::all();
 
-        
-        return view('bookingDetail', compact('groupedBookingDetails', 'bookingDetails', 'borrowingDetails', 'booking_stadium_id', 'items'));
+        return view('bookingDetail', compact(
+            'groupedBookingDetails', 'bookingDetails', 'borrowingDetails', 
+            'booking_stadium_id', 'items', 'totalOverallBookingPrice', 'totalOverallBorrowingPrice'
+        ));
     } else {
         $message = 'คุณยังไม่มีรายการจอง';
-        return view('bookingDetail', compact('message', 'booking_stadium_id'));
+        return view('bookingDetail', compact('message', 'booking_stadium_id', 'totalOverallBookingPrice', 'totalOverallBorrowingPrice'));
     }
 }
-
 
 
 public function destroy($id)
@@ -213,16 +215,14 @@ public function confirmBooking($booking_stadium_id)
 
 
 
-
 public function showLendingModal($bookingId)
 {
-    // สมมติว่าคุณมี Booking Model ที่เก็บข้อมูลการจอง
-    $booking = Booking::with('stadium')->find($bookingId);
-    $items = Item::all(); // หรือเรียกใช้ข้อมูลอุปกรณ์ตามความเหมาะสม
-    $group = Booking::find($id);  // ดึงข้อมูลการจองจากฐานข้อมูล
+    $booking = BookingStadium::with('stadium')->find($bookingId);
+    $items = Item::all();
 
-    return view('bookindDetail', compact('booking', 'items','group'));
+    return view('bookingDetail', compact('booking', 'items'));
 }
+
 
 
 public function showHistoryDetail($booking_stadium_id)

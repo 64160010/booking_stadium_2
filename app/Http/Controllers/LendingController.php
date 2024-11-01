@@ -148,7 +148,6 @@ class LendingController extends Controller
         $item->delete();
         return redirect()->route('lending.index')->with('success', 'ลบอุปกรณ์สำเร็จ!');
     }
-
     public function borrowItem(Request $request)
     {
         $request->validate([
@@ -182,74 +181,73 @@ class LendingController extends Controller
             ->where('booking_date', $request->booking_date)
             ->get();
     
-            foreach ($request->item_id as $index => $itemId) {
-                $borrowQuantity = $request->borrow_quantity[$index];
-                
-                if ($borrowQuantity == 0) {
-                    continue;
-                }
+        foreach ($request->item_id as $index => $itemId) {
+            $borrowQuantity = $request->borrow_quantity[$index];
             
-                $item = Item::find($itemId);
-                if (!$item) {
-                    return redirect()->back()->withErrors("Item not found: $itemId.");
-                }
+            if ($borrowQuantity == 0) {
+                continue;
+            }
+        
+            $item = Item::find($itemId);
+            if (!$item) {
+                return redirect()->back()->withErrors("Item not found: $itemId.");
+            }
+        
+            // คำนวณยอดคงเหลือของอุปกรณ์โดยรวมการยืมในอดีตของผู้ใช้ในรหัสการจองนี้
+            $existingBorrowedByUser = BorrowDetail::where('item_id', $itemId)
+                ->where('users_id', auth()->id())
+                ->where('borrow_id', $borrow->id) // เช็คแค่การยืมในรหัสการจองนี้
+                ->sum('borrow_quantity');
             
-                // คำนวณยอดคงเหลือของอุปกรณ์โดยรวมการยืมในอดีตของผู้ใช้
-                $existingBorrowedByUser = BorrowDetail::where('item_id', $itemId)
-                    ->where('users_id', auth()->id())
-                    ->sum('borrow_quantity');
-                
-                $remainingQuantity = $item->item_quantity - $existingBorrowedByUser;
-            
-                // ตรวจสอบว่าจำนวนที่ผู้ใช้ต้องการยืมรวมกันเกินยอดคงเหลือหรือไม่
-                if ($borrowQuantity > $remainingQuantity) {
-                    return redirect()->back()->withErrors("จำนวนการยืมเกินยอดคงเหลือ ของ {$item->item_name} ยอดคงเหลือที่สามารถยืมได้ : $remainingQuantity");
-                }
-            
-                // โค้ดการบันทึกข้อมูลการยืม (BorrowDetail) ตามปกติ
-                $timeSlotIds = [];
-                foreach ($bookingDetails as $bookingDetail) {
-                    if ($bookingDetail->stadium_id == $request->stadium_id) {
-                        $timeSlotIds[] = $bookingDetail->time_slot_id;
-                    }
-                }
-            
-                $timeSlotIdsStr = implode(',', $timeSlotIds);
-                $totalPrice = $item->price * $borrowQuantity;
-            
-                $existingDetail = BorrowDetail::where('borrow_id', $borrow->id)
-                    ->where('item_id', $itemId)
-                    ->where('stadium_id', $request->stadium_id)
-                    ->where('borrow_date', $request->booking_date)
-                    ->first();
-            
-                if ($existingDetail) {
-                    $existingTimeSlots = explode(',', $existingDetail->time_slot_id);
-                    $newTimeSlots = array_unique(array_merge($existingTimeSlots, $timeSlotIds));
-                    $existingDetail->time_slot_id = implode(',', $newTimeSlots);
-                    $existingDetail->borrow_quantity += $borrowQuantity;
-                    $existingDetail->borrow_total_price += $totalPrice;
-                    $existingDetail->save();
-                } else {
-                    BorrowDetail::create([
-                        'stadium_id' => $request->stadium_id,
-                        'borrow_date' => $request->booking_date,
-                        'time_slot_id' => $timeSlotIdsStr,
-                        'item_id' => $itemId,
-                        'borrow_quantity' => $borrowQuantity,
-                        'borrow_total_price' => $totalPrice,
-                        'borrow_total_hour' => 0,
-                        'item_item_type_id' => $item->item_type_id,
-                        'borrow_id' => $borrow->id,
-                        'users_id' => auth()->id(),
-                    ]);
+            $remainingQuantity = $item->item_quantity - $existingBorrowedByUser;
+        
+            // ตรวจสอบว่าจำนวนที่ผู้ใช้ต้องการยืมรวมกันเกินยอดคงเหลือหรือไม่
+            if ($borrowQuantity > $remainingQuantity) {
+                return redirect()->back()->withErrors("จำนวนการยืมเกินยอดคงเหลือ ของ {$item->item_name} ยอดคงเหลือที่สามารถยืมได้ : $remainingQuantity");
+            }
+        
+            // โค้ดการบันทึกข้อมูลการยืม (BorrowDetail) ตามปกติ
+            $timeSlotIds = [];
+            foreach ($bookingDetails as $bookingDetail) {
+                if ($bookingDetail->stadium_id == $request->stadium_id) {
+                    $timeSlotIds[] = $bookingDetail->time_slot_id;
                 }
             }
-            
+        
+            $timeSlotIdsStr = implode(',', $timeSlotIds);
+            $totalPrice = $item->price * $borrowQuantity;
+        
+            $existingDetail = BorrowDetail::where('borrow_id', $borrow->id)
+                ->where('item_id', $itemId)
+                ->where('stadium_id', $request->stadium_id)
+                ->where('borrow_date', $request->booking_date)
+                ->first();
+        
+            if ($existingDetail) {
+                $existingTimeSlots = explode(',', $existingDetail->time_slot_id);
+                $newTimeSlots = array_unique(array_merge($existingTimeSlots, $timeSlotIds));
+                $existingDetail->time_slot_id = implode(',', $newTimeSlots);
+                $existingDetail->borrow_quantity += $borrowQuantity;
+                $existingDetail->borrow_total_price += $totalPrice;
+                $existingDetail->save();
+            } else {
+                BorrowDetail::create([
+                    'stadium_id' => $request->stadium_id,
+                    'borrow_date' => $request->booking_date,
+                    'time_slot_id' => $timeSlotIdsStr,
+                    'item_id' => $itemId,
+                    'borrow_quantity' => $borrowQuantity,
+                    'borrow_total_price' => $totalPrice,
+                    'borrow_total_hour' => 0,
+                    'item_item_type_id' => $item->item_type_id,
+                    'borrow_id' => $borrow->id,
+                    'users_id' => auth()->id(),
+                ]);
+            }
+        }
     
         return redirect()->back()->with('success', 'ยืมอุปกรณ์สำเร็จ');
     }
-    
     
     
 
