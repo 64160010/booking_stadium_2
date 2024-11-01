@@ -172,11 +172,13 @@
             @endif
 
             <!-- รวมยอดรวมของการจองและการยืม -->
-            <div class="text-end mt-4">
-                <h4>ยอดรวมทั้งหมด: 
-                    <strong>{{ number_format($totalOverallBookingPrice + $totalOverallBorrowingPrice) }} บาท</strong>
-                </h4>
-            </div>
+            @isset($totalOverallBookingPrice)
+    <h4>ยอดรวมทั้งหมด: 
+        <strong>{{ number_format($totalOverallBookingPrice + ($totalOverallBorrowingPrice ?? 0)) }} บาท</strong>
+    </h4>
+
+@endisset
+
 
             <div class="d-flex justify-content-between mt-4">
                 <button class="btn btn-outline-secondary" onclick="window.location='{{ route('booking') }}'">ย้อนกลับ</button>
