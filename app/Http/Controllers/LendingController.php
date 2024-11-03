@@ -164,9 +164,10 @@ class LendingController extends Controller
             ->latest()
             ->first();
     
-        if (!$bookingStadium) {
-            return redirect()->back()->withErrors('การจองสนามไม่พบ');
-        }
+            if (!$bookingStadium) {
+                return redirect()->route('booking')->withErrors('กรุณาทำการจองก่อนยืมอุปกรณ์');
+            }
+            
     
         $borrow = Borrow::firstOrCreate(
             [
@@ -203,8 +204,11 @@ class LendingController extends Controller
         
             // ตรวจสอบว่าจำนวนที่ผู้ใช้ต้องการยืมรวมกันเกินยอดคงเหลือหรือไม่
             if ($borrowQuantity > $remainingQuantity) {
-                return redirect()->back()->withErrors("จำนวนการยืมเกินยอดคงเหลือ ของ {$item->item_name} ยอดคงเหลือที่สามารถยืมได้ : $remainingQuantity");
+                return redirect()->back()->withErrors([
+                    'message' => "จำนวนการยืมเกินยอดคงเหลือ ของ {$item->item_name} ยอดคงเหลือที่สามารถยืมได้ : $remainingQuantity",
+                ]);
             }
+            
         
             // โค้ดการบันทึกข้อมูลการยืม (BorrowDetail) ตามปกติ
             $timeSlotIds = [];
@@ -256,7 +260,7 @@ class LendingController extends Controller
 public function showBookingDetail($id)
 {
     // ค้นหาข้อมูลการจอง
-    $bookingDetail = Booking::find($id);
+    $bookingDetail = BookingStadium::find($id);
      // ค้นหาข้อมูลการยืมอุปกรณ์ที่เกี่ยวข้อง
     $borrowingDetails = Borrow::where('booking_id', $id)->get();
 
@@ -279,6 +283,16 @@ public function destroyBorrow($id)
 }
 
 
+
+public function adminborrow()
+{
+    // ดึง borrow_detail ที่มีสถานะ return_status = 'รอยืม'
+    $borrowDetails = BorrowDetail::with('borrow.user', 'item', 'item.itemType', 'stadium')
+        ->where('return_status', 'รอยืม')
+        ->get();
+
+    return view('admin-borrow', compact('borrowDetails'));
+}
 
 
 

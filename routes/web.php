@@ -116,3 +116,11 @@ Route::post('/booking/{id}/confirm', [BookingController::class, 'confirm'])->nam
 Route::post('/booking/{id}/reject', [BookingController::class, 'reject'])->name('booking.reject');
 
 Route::get('/admin-borrow', [HomeController::class, 'adminBorrow'])->name('admin.borrow');
+Route::get('/admin-borrow', [LendingController::class, 'adminborrow'])->name('admin.borrow');
+
+
+
+
+
+
+

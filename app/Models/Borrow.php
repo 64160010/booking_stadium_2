@@ -39,7 +39,7 @@ class Borrow extends Model
 
     public function bookingStadium()
     {
-        return $this->belongsTo(BookingStadium::class, 'booking_stadium_id');
+        return $this->belongsTo(BookingStadium::class, 'booking_stadium_id', 'id');
     }
     
 }

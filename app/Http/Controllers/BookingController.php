@@ -290,12 +290,27 @@ public function showHistoryDetail($booking_stadium_id)
 
 public function confirm($id)
 {
+    // ค้นหาการจองด้วย ID ที่ระบุ
     $booking = BookingStadium::findOrFail($id);
+    
+    // เปลี่ยนสถานะการจอง
     $booking->booking_status = 'ชำระเงินแล้ว';
     $booking->save();
 
+   // เปลี่ยนสถานะการยืมที่เชื่อมโยง
+   foreach ($booking->borrow as $borrowing) {
+    // เปลี่ยนสถานะ borrow_detail ที่เชื่อมโยงกับ borrow และ booking_stadium นี้
+    foreach ($borrowing->details as $detail) {
+        // ตรวจสอบว่ารายละเอียดการยืมนี้เชื่อมโยงกับ booking_stadium นี้
+        if ($detail->borrow->booking_stadium_id == $booking->id) {
+            $detail->return_status = 'รอยืม';
+            $detail->save();
+        }
+    }
+}
     return redirect()->back()->with('success', 'ยืนยันการชำระเงินเรียบร้อยแล้ว');
 }
+
 
 public function reject(Request $request, $id)
     {
