@@ -114,3 +114,5 @@ Route::get('/history-detail/{booking_stadium_id}', [BookingController::class, 's
 
 Route::post('/booking/{id}/confirm', [BookingController::class, 'confirm'])->name('booking.confirm');
 Route::post('/booking/{id}/reject', [BookingController::class, 'reject'])->name('booking.reject');
+
+Route::get('/admin-borrow', [HomeController::class, 'adminBorrow'])->name('admin.borrow');

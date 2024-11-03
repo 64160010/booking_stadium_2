@@ -37,6 +37,10 @@ class Borrow extends Model
         return $this->hasMany(BorrowDetail::class, 'borrow_id'); 
     }
 
+    public function bookingStadium()
+    {
+        return $this->belongsTo(BookingStadium::class, 'booking_stadium_id');
+    }
     
 }
 

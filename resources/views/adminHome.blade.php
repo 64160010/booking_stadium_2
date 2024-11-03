@@ -52,30 +52,29 @@
                             route('lending.index'), 
                             'จัดการการยืม'],
                             
-                        
+                            ['primary', 
+                            'ยืม-คืน-ซ่อม', 
+                            'จัดการและตรวจสอบการยืม คืน และซ่อมแซมอุปกรณ์', 
+                            route('admin.borrow'), 
+                            'จัดการยืม-คืน-ซ่อม']
                             
-                        ] as $card) 
-                            <div class="col-md-3">
-                                <!-- เปลี่ยนจากการกดปุ่มมาเป็นคลิกการ์ดทั้งหมด -->
-                                <a href="{{ $card[3] }}" class="text-decoration-none">
-                                    <div class="card text-white bg-{{ $card[0] }} shadow-sm h-100 card-hover">
-                                        <div class="card-body d-flex flex-column justify-content-between">
-                                            <!-- หัวเรื่องของการ์ด (แสดงไอคอนและหัวข้อ) -->
-                                            <h5 class="card-title">
-                                                <i class="bi bi-box-arrow-up-right"></i> {{ $card[1] }}
-                                            </h5>
-                                            <!-- คำอธิบายเนื้อหาของการ์ด -->
-                                            <p class="card-text">{{ $card[2] }}</p>
-                                            
-                                            <!-- แสดงจำนวนผู้ใช้หรือจำนวนสนาม (ถ้ามี) -->
-                                            @if(isset($card[5]))
-                                                <p class="mb-0"><small>{{ $card[5] }}</small></p>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        @endforeach
+                            ] as $card) 
+        <div class="col-md-3">
+            <a href="{{ $card[3] }}" class="text-decoration-none">
+                <div class="card text-white bg-{{ $card[0] }} shadow-sm h-100 card-hover">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <h5 class="card-title">
+                            <i class="bi bi-box-arrow-up-right"></i> {{ $card[1] }}
+                        </h5>
+                        <p class="card-text">{{ $card[2] }}</p>
+                        @if(isset($card[5]))
+                            <p class="mb-0"><small>{{ $card[5] }}</small></p>
+                        @endif
+                    </div>
+                </div>
+            </a>
+        </div>
+    @endforeach
                     </div>
                 </div>
             </div>

@@ -43,6 +43,9 @@
                 <div class="alert alert-info">
                     {{ $message }}
                 </div>
+                @php
+    $totalOverallBookingPrice = 0; // ตัวแปรสำหรับเก็บยอดรวมการจอง
+@endphp
             @elseif (isset($groupedBookingDetails) && $groupedBookingDetails->isNotEmpty())
                 <!-- ถ้ามีข้อมูลการจอง -->
                 <table class="table table-bordered table-striped mt-4">
