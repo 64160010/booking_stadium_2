@@ -123,6 +123,7 @@ Route::post('/admin/borrow/{id}/return', [LendingController::class, 'returnBorro
 Route::post('/admin/borrow/{id}/repair', [LendingController::class, 'repairBorrow'])->name('admin.borrow.repair');
 Route::post('/admin/borrow/{id}/repair-complete', [LendingController::class, 'repairComplete'])->name('admin.borrow.repairComplete');
 
+Route::get('/admin-borrow', [lendingController::class, 'searchBorrow'])->name('admin.borrow');
 
 
 

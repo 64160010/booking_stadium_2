@@ -10,6 +10,24 @@
         </div>
     @endif
 
+    <!-- แบบฟอร์มค้นหา -->
+    <div class="mb-4">
+        <form action="{{ url()->current() }}" method="GET" class="form-inline">
+            <div class="form-group mr-2">
+                <input style="padding-right:120px;" type="text" name="booking_stadium_id" class="form-control" placeholder="รหัสการจอง" value="{{ request('booking_stadium_id') }}">
+            </div>
+            <div class="form-group mr-2">
+                <input style="padding-right:120px;" type="text" name="fname" class="form-control" placeholder="ชื่อผู้ใช้" value="{{ request('fname') }}">
+            </div>
+            <div class="form-group mr-2">
+                <input style="padding-right:120px;" type="date" name="borrow_date" class="form-control" placeholder="วันที่" value="{{ request('borrow_date') }}">
+            </div>
+            <input type="hidden" name="status" value="{{ request('status') }}">
+            <button type="submit" class="btn btn-primary">ค้นหา</button>
+            <a href="{{ url()->current() }}" class="btn btn-secondary ml-2">รีเซ็ต</a>
+        </form>
+    </div>
+
    <!-- Filter Buttons -->
 <div class="text-center mb-3">
     <button class="btn btn-info {{ request('status') == 'รอยืม' ? 'active' : '' }}" onclick="filterBorrowings('รอยืม')">รอยืม</button>

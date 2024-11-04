@@ -410,6 +410,41 @@ public function repairComplete(Request $request, $id)
 }
 
 
+public function searchBorrow(Request $request)
+{
+    $query = BorrowDetail::with(['borrow', 'item', 'stadium', 'item.itemType']);
+
+     // Apply booking stadium ID filter if provided
+     if ($request->filled('booking_stadium_id')) {
+        $query->whereHas('borrow', function ($q) use ($request) {
+            // เช็คว่า booking_stadium_id ใน borrow ตรงกับค่าที่ค้นหา
+            $q->where('booking_stadium_id', $request->booking_stadium_id);
+        });
+    }
+
+    // Apply borrower name filter if provided
+    if ($request->filled('fname')) {
+        $query->whereHas('borrow.user', function ($q) use ($request) {
+            $q->where('fname', 'like', '%' . $request->fname . '%');
+        });
+    
+}
+
+    // Apply borrow date filter if provided
+    if ($request->filled('borrow_date')) {
+        $query->where('borrow_date', $request->borrow_date);
+    }
+
+    // Apply status filter if provided
+    if ($request->filled('status')) {
+        $query->where('return_status', $request->status);
+    }
+
+    $borrowDetails = $query->get();
+    
+ 
+    return view('admin-borrow', compact('borrowDetails'));
+}
 
 
 
