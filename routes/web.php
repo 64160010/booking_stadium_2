@@ -118,6 +118,10 @@ Route::post('/booking/{id}/reject', [BookingController::class, 'reject'])->name(
 Route::get('/admin-borrow', [HomeController::class, 'adminBorrow'])->name('admin.borrow');
 Route::get('/admin-borrow', [LendingController::class, 'adminborrow'])->name('admin.borrow');
 
+Route::post('/admin/borrow/{id}/approve', [LendingController::class, 'approveBorrow'])->name('admin.borrow.approve');
+Route::post('/admin/borrow/{id}/return', [LendingController::class, 'returnBorrow'])->name('admin.borrow.return');
+Route::post('/admin/borrow/{id}/repair', [LendingController::class, 'repairBorrow'])->name('admin.borrow.repair');
+Route::post('/admin/borrow/{id}/repair-complete', [LendingController::class, 'repairComplete'])->name('admin.borrow.repairComplete');
 
 
 

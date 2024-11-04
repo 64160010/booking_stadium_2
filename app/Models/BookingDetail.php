@@ -19,6 +19,7 @@ class BookingDetail extends Model
         'booking_date', 
         'users_id',
         'time_slot_id',
+        
         // คอลัมน์ time_slot_stadium_id อาจจะไม่จำเป็น ถ้าไม่ใช้ในการเชื่อมโยง
     ];
 

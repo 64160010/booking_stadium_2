@@ -24,6 +24,7 @@ class BorrowDetail extends Model
         'users_id',
         'time_slot_id',
         'stadium_id',
+        'return_status',
     ];
 
     // สัมพันธ์กับตาราง Item

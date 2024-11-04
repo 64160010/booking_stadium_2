@@ -284,15 +284,131 @@ public function destroyBorrow($id)
 
 
 
-public function adminborrow()
+public function adminborrow(Request $request)
 {
-    // ดึง borrow_detail ที่มีสถานะ return_status = 'รอยืม'
-    $borrowDetails = BorrowDetail::with('borrow.user', 'item', 'item.itemType', 'stadium')
-        ->where('return_status', 'รอยืม')
-        ->get();
+    // รับค่าสถานะจาก query string
+    $status = $request->query('status');
+    
+    // สร้างคำสั่ง query
+    $borrowDetailsQuery = BorrowDetail::with('borrow.user', 'item', 'item.itemType', 'stadium');
+    
+    // ถ้ามีการกำหนดสถานะ จะกรองตามสถานะ
+    if ($status) {
+        $borrowDetailsQuery->where('return_status', $status);
+    }
 
-    return view('admin-borrow', compact('borrowDetails'));
+    $borrowDetails = $borrowDetailsQuery->get();
+
+    return view('admin-borrow', compact('borrowDetails', 'status'));
 }
+
+
+public function approveBorrow($id)
+{
+    // หา borrow detail ตาม ID ที่ส่งมา
+    $borrowDetail = BorrowDetail::find($id);
+
+    // ตรวจสอบว่าเจอ borrow detail หรือไม่
+    if ($borrowDetail) {
+        // เปลี่ยนสถานะ return_status เป็น "ยืมแล้ว"
+        $borrowDetail->return_status = 'ยืมแล้ว';
+        $borrowDetail->save();
+
+        // ส่งข้อความสถานะกลับไปยัง view
+        return redirect()->back()->with('success', 'สถานะการยืมถูกเปลี่ยนเป็น "ยืมแล้ว" เรียบร้อย');
+    } else {
+        return redirect()->back()->with('error', 'ไม่พบข้อมูลการยืม');
+    }
+}
+
+
+public function returnBorrow($id)
+{
+    // หา borrow detail ตาม ID ที่ส่งมา
+    $borrowDetail = BorrowDetail::find($id);
+
+     // ค้นหาข้อมูลอุปกรณ์ที่เกี่ยวข้อง
+     $item = Item::findOrFail($borrowDetail->item_id); // สมมติว่า item_id คือคอลัมน์ที่เชื่อมโยงกับอุปกรณ์
+
+
+    // ตรวจสอบว่าเจอ borrow detail หรือไม่
+    if ($borrowDetail) {
+        // เปลี่ยนสถานะ return_status เป็น "คืนแล้ว"
+        $borrowDetail->return_status = 'คืนแล้ว';
+        $borrowDetail->save();
+
+        $item->item_quantity += $borrowDetail->borrow_quantity;
+    $item->save();
+
+        // ส่งข้อความสถานะกลับไปยัง view
+        return redirect()->back()->with('success', 'สถานะการยืมถูกเปลี่ยนเป็น "คืนแล้ว" เรียบร้อย');
+    } else {
+        return redirect()->back()->with('error', 'ไม่พบข้อมูลการยืม');
+    }
+}
+
+
+public function repairBorrow(Request $request, $id)
+{
+    // Validate the input for repair note
+    $request->validate([
+        'repair_note' => 'required|string|max:20', // Ensuring it's a string with a max length of 20
+    ]);
+
+    // Find the borrow detail by ID
+    $borrowDetail = BorrowDetail::find($id);
+
+    // Check if the borrow detail exists
+    if ($borrowDetail) {
+        // Change the return_status to "ซ่อม"
+        $borrowDetail->return_status = 'ซ่อม';
+
+        // Save the repair note
+        $borrowDetail->repair_note = $request->repair_note;
+
+        $borrowDetail->save();
+
+        // Send success message back to the view
+        return redirect()->back()->with('success', 'สถานะการยืมถูกเปลี่ยนเป็น "ซ่อม" เรียบร้อย');
+    } else {
+        return redirect()->back()->with('error', 'ไม่พบข้อมูลการยืม');
+    }
+}
+
+public function repairComplete(Request $request, $id)
+{
+    // Validate the input for repair note
+    $request->validate([
+        'repair_note' => 'required|string|max:20', // Ensuring it's a string with a max length of 20
+    ]);
+
+    // Find the borrow detail by ID
+    $borrowDetail = BorrowDetail::find($id);
+
+     // ค้นหาข้อมูลอุปกรณ์ที่เกี่ยวข้อง
+     $item = Item::findOrFail($borrowDetail->item_id); // สมมติว่า item_id คือคอลัมน์ที่เชื่อมโยงกับอุปกรณ์
+
+
+    // Check if the borrow detail exists
+    if ($borrowDetail) {
+        // Change the return_status to "ซ่อมแล้ว"
+        $borrowDetail->return_status = 'ซ่อมแล้ว';
+
+        // Save the repair note
+        $borrowDetail->repair_note = $request->repair_note;
+
+        $borrowDetail->save();
+
+        $item->item_quantity += $borrowDetail->borrow_quantity;
+    $item->save();
+
+        // Send success message back to the view
+        return redirect()->back()->with('success', 'สถานะการยืมถูกเปลี่ยนเป็น "ซ่อมแล้ว" เรียบร้อย');
+    } else {
+        return redirect()->back()->with('error', 'ไม่พบข้อมูลการยืม');
+    }
+}
+
 
 
 
