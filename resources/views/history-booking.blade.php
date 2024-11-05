@@ -3,16 +3,37 @@
 
 @section('content')
 <div class="container">
+    <h2 class="text-center mb-4">ประวัติการจองและการยืม</h2>
+    <div class="mb-4">
+        <form action="{{ url()->current() }}" method="GET" class="form-inline">
+            <div class="form-group mr-2">
+                <input style="padding-right:120px;" type="text" name="booking_stadium_id" class="form-control" placeholder="รหัสการจอง" value="{{ request('booking_stadium_id') }}">
+            </div>
+            <div class="form-group mr-2">
+                <input style="padding-right:120px;" type="text" name="fname" class="form-control" placeholder="ชื่อผู้ใช้" value="{{ request('fname') }}">
+            </div>
+            <div class="form-group mr-2">
+                <input style="padding-right:120px;" type="date" name="borrow_date" class="form-control" placeholder="วันที่" value="{{ request('borrow_date') }}">
+            </div>
+            <input type="hidden" name="status" value="{{ request('status') }}">
+            <button type="submit" class="btn btn-primary">ค้นหา</button>
+            <a href="{{ url()->current() }}" class="btn btn-secondary ml-2">รีเซ็ต</a>
+        </form>
+    </div>
     @auth
         @if (Auth::user()->is_admin)
+        <div style="text-align: center;">
             <button class="btn btn-warning" onclick="filterBookings('รอการตรวจสอบ')">รอการตรวจสอบ</button>
             <button class="btn btn-success" onclick="filterBookings('ชำระเงินแล้ว')">ชำระเงินแล้ว</button>
             <button class="btn btn-danger" onclick="filterBookings('การชำระเงินถูกปฏิเสธ')">การชำระเงินถูกปฏิเสธ</button>
+            <button class="btn btn-primary" onclick="filterBookings('หมดอายุการชำระเงิน')">หมดอายุการชำระเงิน</button>
             <button class="btn btn-secondary" onclick="resetFilters()">แสดงทั้งหมด</button>
+        </div>
         @endif
     @endauth
+    
 
-    <h2 class="text-center mb-4">ประวัติการจองและการยืม</h2>
+    
 
     @if(session('success'))
         <div class="alert alert-success">
@@ -20,7 +41,9 @@
         </div>
     @endif
 
-    <table class="table table-striped">
+    
+
+    <table class="table table-striped" style="margin-top:30px;">
         <thead>
             <tr>
                 <th>รหัสการจอง</th>
@@ -52,9 +75,9 @@
             @foreach($bookings as $booking)
             <tr class="{{ $booking->booking_status }}">
                 <td>{{ $booking->id }}</td>
-                <td>{{ $booking->payment ? $booking->payment->payer_name : 'N/A' }}</td>
-                <td>{{ $booking->payment ? number_format($booking->payment->amount, 2) : 'N/A' }}</td>
-                <td>{{ $booking->payment->transfer_datetime ?? 'N/A' }}</td>
+                <td>{{ $booking->payment ? $booking->payment->payer_name : ($booking->user ? $booking->user->fname : 'N/A') }}</td>
+                <td>{{ $booking->payment ? number_format($booking->payment->amount, 2) : '-' }}</td>
+                <td>{{ $booking->payment->transfer_datetime ?? '-' }}</td>
                 <td>{{ $booking->booking_status }}
                 <td>
                     <a href="{{ route('historyDetail', $booking->id) }}" class="btn btn-primary">รายการ</a>
@@ -78,17 +101,18 @@
                             </div>
                         </div>
                     @else
-                        N/A
+                        -
                     @endif
                 </td>
                 <td>
                 @auth
-                    @if (Auth::user()->is_admin && $booking->booking_status != 'การชำระเงินถูกปฏิเสธ')
+                @if (Auth::user()->is_admin && !in_array($booking->booking_status, ['การชำระเงินถูกปฏิเสธ', 'หมดอายุการชำระเงิน']))
+
                         <form action="{{ route('booking.confirm', $booking->id) }}" method="POST" style="display: inline;">
                             @csrf
-                            <button type="submit" class="btn btn-success">ยืนยัน</button>
+                            <button type="submit" class="btn btn-success" >ยืนยัน</button>
                         </form>
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $booking->id }}">ปฏิเสธ</button>
+                        <button type="button" class="btn btn-danger"" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $booking->id }}">ปฏิเสธ</button>
                         <div class="modal fade" id="rejectModal{{ $booking->id }}" tabindex="-1" aria-labelledby="rejectModalLabel{{ $booking->id }}" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
@@ -131,4 +155,6 @@
         window.location.href = '?'; // รีเซ็ตฟิลเตอร์โดยกลับไปที่หน้าเริ่มต้น
     }
 </script>
+
+
 @endsection
