@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Stadium;
 use Illuminate\Http\Request;
 use App\Models\BookingStadium;
+use App\Models\BorrowDetail;
 use App\Models\BookingDetail;
 use App\Models\Borrow;
 use App\Models\item;
@@ -319,16 +320,34 @@ public function confirm($id)
     return redirect()->back()->with('success', 'ยืนยันการชำระเงินเรียบร้อยแล้ว');
 }
 
-
 public function reject(Request $request, $id)
-    {
-        $booking = BookingStadium::findOrFail($id);
-        $booking->booking_status = 'การชำระเงินถูกปฏิเสธ';
-        $booking->reject_reason = $request->input('reject_reason');
-        $booking->save();
+{
+    $booking = BookingStadium::findOrFail($id);
+    $booking->booking_status = 'การชำระเงินถูกปฏิเสธ';
+    $booking->reject_reason = $request->input('reject_reason');
+    $booking->save();
 
-        return redirect()->back()->with('success', 'การปฏิเสธการชำระเงินสำเร็จแล้ว');
+    // ค้นหารายการยืมที่เกี่ยวข้อง
+    $borrows = Borrow::where('booking_stadium_id', $id)->get();
+    foreach ($borrows as $borrow) {
+        // อัปเดตสถานะของรายการยืมเป็น 'การชำระเงินถูกปฏิเสธ'
+        $borrow->borrow_status = 'การชำระเงินถูกปฏิเสธ';
+        $borrow->save();
+
+        // ค้นหารายละเอียดการยืม
+        $borrowDetails = BorrowDetail::where('borrow_id', $borrow->id)->get();
+        foreach ($borrowDetails as $detail) {
+            // เพิ่มจำนวนที่ยืมกลับไปยังรายการอุปกรณ์
+            $item = Item::findOrFail($detail->item_id);
+            $item->item_quantity += $detail->borrow_quantity; // บวกจำนวนที่ยืมกลับ
+            $item->save();
+        }
     }
+
+    return redirect()->back()->with('success', 'การปฏิเสธการชำระเงินสำเร็จแล้ว');
+}
+
+
 
 
 
