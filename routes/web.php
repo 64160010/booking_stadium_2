@@ -122,6 +122,7 @@ Route::post('/admin/borrow/{id}/approve', [LendingController::class, 'approveBor
 Route::post('/admin/borrow/{id}/return', [LendingController::class, 'returnBorrow'])->name('admin.borrow.return');
 Route::post('/admin/borrow/{id}/repair', [LendingController::class, 'repairBorrow'])->name('admin.borrow.repair');
 Route::post('/admin/borrow/{id}/repair-complete', [LendingController::class, 'repairComplete'])->name('admin.borrow.repairComplete');
+Route::post('/admin/borrow/{id}/repairUnable', [LendingController::class, 'repairUnable'])->name('admin.borrow.repairUnable');
 
 Route::get('/admin-borrow', [lendingController::class, 'searchBorrow'])->name('admin.borrow');
 

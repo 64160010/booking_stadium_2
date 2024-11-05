@@ -297,7 +297,10 @@ public function adminborrow(Request $request)
         $borrowDetailsQuery->where('return_status', $status);
     }
 
-    $borrowDetails = $borrowDetailsQuery->get();
+    $borrowDetails = BorrowDetail::where('return_status', '!=', 'ยังไม่ตรวจสอบ')
+    ->with(['borrow.bookingStadium', 'borrow.user', 'item', 'stadium', 'timeSlots'])
+    ->get();
+
 
     return view('admin-borrow', compact('borrowDetails', 'status'));
 }
@@ -446,6 +449,15 @@ public function searchBorrow(Request $request)
     return view('admin-borrow', compact('borrowDetails'));
 }
 
+public function repairUnable(Request $request, $id)
+{
+    $borrowDetail = BorrowDetail::findOrFail($id);
+    $borrowDetail->return_status = 'ซ่อมไม่ได้';
+    $borrowDetail->repair_note = $request->input('repair_note');
+    $borrowDetail->save();
+
+    return redirect()->back()->with('success', 'สถานะการซ่อมได้รับการอัปเดตเป็น ซ่อมไม่ได้');
+}
 
 
 }

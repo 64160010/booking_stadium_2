@@ -35,6 +35,7 @@
     <button class="btn btn-danger {{ request('status') == 'คืนแล้ว' ? 'active' : '' }}" onclick="filterBorrowings('คืนแล้ว')">คืนแล้ว</button>
     <button class="btn btn-warning {{ request('status') == 'ซ่อม' ? 'active' : '' }}" onclick="filterBorrowings('ซ่อม')">ซ่อม</button>
     <button class="btn btn-primary {{ request('status') == 'ซ่อมแล้ว' ? 'active' : '' }}" onclick="filterBorrowings('ซ่อมแล้ว')">ซ่อมแล้ว</button>
+    <button class="btn btn-danger {{ request('status') == 'ซ่อมไม่ได้' ? 'active' : '' }}" onclick="filterBorrowings('ซ่อมไม่ได้')">ซ่อมไม่ได้</button>
     <button class="btn btn-secondary {{ request('status') == null ? 'active' : '' }}" onclick="resetFilters()">แสดงทั้งหมด</button>
 </div>
 
@@ -64,7 +65,8 @@
         </thead>
         <tbody>
             @foreach($borrowDetails as $detail)
-                <tr class="{{ $detail->return_status }}">
+    @if($detail->return_status !== 'ยังไม่ตรวจสอบ')
+        <tr class="{{ $detail->return_status }}">
                     <td>{{ $detail->borrow->bookingStadium->id ?? 'N/A' }}</td>
                     <td>{{ $detail->borrow->user->fname ?? 'N/A' }}</td>
                     <td>{{ $detail->item->item_name ?? 'N/A' }}</td>
@@ -115,10 +117,23 @@
                                     <input type="hidden" name="repair_note" value="ซ่อมแล้ว"> <!-- Hidden field to send repair note -->
                                     <button type="submit" class="btn btn-info">ซ่อมแล้ว</button>
                                 </form>
+
+                                <form action="{{ route('admin.borrow.repairUnable', $detail->id) }}" method="POST" style="display: inline;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger">ซ่อมไม่ได้</button>
+                                    
+                                </form>
+                                
+
+                                
                         
                             @elseif ($detail->return_status == 'ซ่อมแล้ว')
                                 <!-- สถานะเมื่อการซ่อมเสร็จสมบูรณ์ -->
                                 <span class="text-muted">ซ่อมเสร็จแล้ว</span>
+                            
+                            @elseif ($detail->return_status == 'ซ่อมไม่ได้')
+                                <!-- สถานะเมื่อการซ่อมเสร็จสมบูรณ์ -->
+                                <span class="text-muted">ไม่สามารถซ่อมได้แล้ว</span>
                             @endif
                         </td>
                         
@@ -133,6 +148,7 @@
 
                     @endauth
                 </tr>
+                @endif
             @endforeach
         </tbody>
     </table>
