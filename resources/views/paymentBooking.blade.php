@@ -42,13 +42,9 @@
 
                     <div class="form-group mb-3">
                         <label for="booking_code">รหัสการจอง*</label>
-                        <select id="booking_code" name="booking_code" class="form-control" required>
-                            <option value="" disabled selected>กรุณาเลือกรหัสการจอง</option>
-                            @foreach($bookings as $booking)
-                                <option value="{{ $booking->id }}">{{ $booking->id }} ({{ $booking->booking_status }})</option>
-                            @endforeach
-                        </select>
+                        <input type="text" id="booking_code" name="booking_code" class="form-control" value="{{ $booking->id }}" readonly>
                     </div>
+                    
 
                     <div class="form-group mb-3">
                         <label for="payer_name">ชื่อผู้โอน*</label>
@@ -95,4 +91,65 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    let timeLeft = 60; // ตั้งเวลา 20 วินาที
+    const countdownElement = document.createElement('div');
+    countdownElement.className = 'alert alert-warning text-center';
+    countdownElement.innerHTML = `เหลือเวลาในการชำระเงิน: ${timeLeft} วินาที`;
+    document.querySelector('.container').prepend(countdownElement);
+
+    const countdownTimer = setInterval(() => {
+        timeLeft--;
+        countdownElement.innerHTML = `เหลือเวลาในการชำระเงิน: ${timeLeft} วินาที`;
+
+        if (timeLeft <= 0) {
+            clearInterval(countdownTimer);
+            expirePayment();
+        }
+    }, 1000);
+
+    function expirePayment() {
+    const bookingCode = document.getElementById('booking_code').value;
+
+    if (!bookingCode) {
+        alert("กรุณาทำรายการจองก่อน");
+        return;
+    }
+
+    fetch("{{ route('expire.payment') }}", {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ booking_code: bookingCode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('การชำระเงินของคุณหมดเวลา โปรดทำรายการใหม่');
+            window.location.href = "{{ route('home') }}"; // กลับไปหน้าแรก
+        } else {
+            alert(data.message || 'เกิดข้อผิดพลาดในการตรวจสอบสถานะการชำระเงิน');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการตรวจสอบสถานะการชำระเงิน'); 
+    });
+}
+
+
+
+
+
+});
+
+</script>
+
+
+</script>
+
 @endsection

@@ -11,20 +11,34 @@ use App\Models\Item;
 
 class PaymentController extends Controller
 {
-    public function showPaymentForm($bookingId)
+    public function showPaymentForm()
     {
-        // ดึงข้อมูลการจองสนาม
-        $booking = BookingStadium::find($bookingId);
+        // ตรวจสอบว่าผู้ใช้ล็อกอินอยู่หรือไม่
+        $userId = auth()->id();
+        if (!$userId) {
+            return redirect()->route('login')->with('error', 'กรุณาเข้าสู่ระบบ');
+        }
     
-        // ดึงรายการการจองทั้งหมดของผู้ใช้
-        $bookings = BookingStadium::where('users_id', auth()->id())->get();
+        // ดึงข้อมูลการจองล่าสุดของผู้ใช้
+        $latestBooking = BookingStadium::where('users_id', $userId)
+                                        ->orderBy('created_at', 'desc')
+                                        ->first();
+    
+        // หากไม่มีการจอง ให้แสดงข้อความหรือจัดการตามที่ต้องการ
+        if (!$latestBooking) {
+            return redirect()->route('home')->with('error', 'คุณยังไม่มีการจองสนาม');
+        }
+    
+        // ดึงรายการการจองทั้งหมดของผู้ใช้ (ถ้าจำเป็น)
+        $bookings = BookingStadium::where('users_id', $userId)->get();
     
         // ส่งข้อมูลไปยัง view
         return view('paymentBooking', [
-            'booking' => $booking,
+            'booking' => $latestBooking, // ใช้รหัสการจองล่าสุด
             'bookings' => $bookings, // ส่งตัวแปร bookings ไปยังวิว
         ]);
     }
+    
     
    // ประมวลผลการชำระเงิน
 public function processPayment(Request $request)
@@ -70,6 +84,11 @@ public function processPayment(Request $request)
     $booking = BookingStadium::find($request->input('booking_code'));
     $booking->booking_status = 'รอการตรวจสอบ';
     $booking->save();
+
+    // เช็คว่าการจองยังไม่หมดอายุ
+    if ($booking->booking_status == 'หมดอายุการชำระเงิน') {
+        return redirect()->back()->withErrors('การจองนี้หมดอายุการชำระเงินแล้ว ไม่สามารถทำรายการได้');
+    }
 
     // ตรวจสอบว่ามีรายการยืมอุปกรณ์ที่เชื่อมโยงกับการจองนี้หรือไม่
     $borrowItems = Borrow::where('booking_stadium_id', $request->input('booking_code'))->get();
@@ -128,6 +147,33 @@ public function historyBooking(Request $request)
 
     return view('history-booking', compact('bookings'));
 }
+
+
+public function expirePayment(Request $request)
+{
+    $bookingCode = $request->input('booking_code');
+
+    // อัปเดตสถานะการจองในตาราง booking_stadium
+    $booking = BookingStadium::where('id', $bookingCode)->first();
+    if ($booking) {
+        $booking->booking_status = 'หมดอายุการชำระเงิน';
+        $booking->save();
+    } else {
+        return response()->json(['status' => 'error', 'message' => 'ไม่พบการจองนี้']);
+    }
+
+    // อัปเดตสถานะการยืมในตาราง borrow
+    $borrows = Borrow::where('booking_stadium_id', $bookingCode)->get(); // ใช้ get() เพื่ออัปเดตทุกแถวที่ตรงกับ booking_id
+    if ($borrows->isNotEmpty()) {
+        foreach ($borrows as $borrow) {
+            $borrow->borrow_status = 'หมดอายุการชำระเงิน';
+            $borrow->save();
+        }
+    }
+
+    return response()->json(['status' => 'success']); // แก้ไขให้เป็น 'success' แทน 'expired'
+}
+
 
 
 
