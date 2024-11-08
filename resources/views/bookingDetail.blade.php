@@ -310,7 +310,7 @@
                                         <th>ประเภท</th>
                                         <th>ราคา</th>
                                         <th>ถูกยืม</th>
-                                        <th>ซ่อมอยู่</th>
+                                        
                                         <th>คงเหลือ</th>
                                         <th>จำนวน</th> <!-- คอลัมน์สำหรับการใส่จำนวน -->
                                     </tr>
@@ -333,7 +333,7 @@
                                             <td>{{ $item->price }} บาท</td>
                                             <td>{{ $item->borrowedQuantity() }}</td>
 
-                                            <td>{{ $item->repair_quantity }}</td>
+                                           
                                             <td>{{ $item->item_quantity }}</td>
                                             <td>
                                                 <input type="hidden" name="item_id[]" value="{{ $item->id }}">

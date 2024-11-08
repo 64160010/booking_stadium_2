@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid mt-4">
     <div class="row justify-content-center">
-        <div class="col-12">
+        <div class="col-7">
             <div class="card shadow-lg border-0">
                 <div class="card-header bg-primary text-white text-center">
                     <h4>{{ __('การจัดการสมาชิก') }}</h4>

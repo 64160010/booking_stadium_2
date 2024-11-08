@@ -11,7 +11,7 @@
 @section('content')
     <div class="container-fluid mt-4">
         <div class="row justify-content-center">
-            <div class="col-12">
+            <div class="col-7">
                 <div class="card shadow-lg border-0">
                     <div class="card-header" style="text-align: center; color:white; background-color:#4800ff">
                         <h4>{{ __('รายการอุปกรณ์') }}</h4>
@@ -61,8 +61,8 @@
                                     <th>รูปภาพ</th>
                                     <th>ประเภท</th>
                                     <th>ราคา</th>
-                                    <th>ถูกยืม</th>
-                                    <th>ซ่อมอยู่</th>
+                                    {{-- <th>ถูกยืม</th> --}}
+                                    {{-- <th>ซ่อมอยู่</th> --}}
                                     <th>คงเหลือ</th>
                                     <th>จัดการ</th>
                                 </tr>
@@ -83,8 +83,8 @@
                                         </td>
                                         <td>{{ $item->itemType->type_name }}</td>
                                         <td>{{ $item->price }} บาท</td>
-                                        <td>{{ $item->borrowed_quantity }}</td>
-                                        <td>{{ $item->repair_quantity }}</td>
+                                        {{-- <td>{{ $item->borrow_quantity }}</td> --}}
+                                        {{-- <td>{{ $item->repair_quantity }}</td> --}}
                                         <td>{{ $item->item_quantity - $item->borrowed_quantity - $item->repair_quantity }}
                                         </td>
                                         <td>
