@@ -47,11 +47,15 @@ public function processPayment(Request $request)
     $validatedData = $request->validate([
         'booking_code' => 'required|exists:booking_stadium,id',
         'payer_name' => 'required|string|max:255',
-        'phone_number' => 'required|string|max:15',
+       'phone_number' => 'required|numeric|digits:10',
         'select_bank' => 'required',
         'transfer_datetime' => 'required|date',
         'transfer_amount' => 'required|numeric',
         'transfer_slip' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ], [
+        'phone_number.required' => 'กรุณากรอกหมายเลขโทรศัพท์',
+        'phone_number.numeric' => 'หมายเลขโทรศัพท์ต้องเป็นตัวเลขเท่านั้น',
+        'phone_number.digits' => 'หมายเลขโทรศัพท์ต้องมีความยาว 10 ตัว',
     ]);
 
     // จัดการการอัปโหลดไฟล์สลิป

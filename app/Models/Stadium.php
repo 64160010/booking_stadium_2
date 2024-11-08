@@ -21,4 +21,16 @@ class Stadium extends Model
     {
         return $this->hasMany(TimeSlot::class, 'stadium_id', 'id');
     }
+    // Stadium.php
+public function details()
+{
+    return $this->hasMany(BookingDetail::class, 'stadium_id');
+}
+
+// app/Models/Stadium.php
+public function bookings()
+{
+    return $this->hasMany(BookingStadium::class, 'stadium_id');
+}
+
 }

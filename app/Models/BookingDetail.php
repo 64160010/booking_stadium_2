@@ -47,4 +47,16 @@ class BookingDetail extends Model
     {
         return $this->belongsTo(TimeSlot::class, 'time_slot_id'); // ใช้เพียง time_slot_id
     }
+
+    // ความสัมพันธ์กับตาราง Borrow
+   // ในโมเดล BookingDetail
+public function borrow()
+{
+    return $this->hasOne(Borrow::class, 'booking_detail_id'); // ปรับให้ตรงกับคอลัมน์ที่เชื่อมโยงจริง
+}
+
+
+
+
+
 }

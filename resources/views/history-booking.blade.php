@@ -5,7 +5,7 @@
 <div class="container">
     <h2 class="text-center mb-4">ประวัติการจองและการยืม</h2>
     <div class="mb-4">
-        <form action="{{ url()->current() }}" method="GET" class="form-inline">
+        <form action="{{ route('history.booking') }}" method="GET" class="form-inline">
             <div class="form-group mr-2">
                 <input style="padding-right:120px;" type="text" name="booking_stadium_id" class="form-control" placeholder="รหัสการจอง" value="{{ request('booking_stadium_id') }}">
             </div>
@@ -17,7 +17,7 @@
             </div>
             <input type="hidden" name="status" value="{{ request('status') }}">
             <button type="submit" class="btn btn-primary">ค้นหา</button>
-            <a href="{{ url()->current() }}" class="btn btn-secondary ml-2">รีเซ็ต</a>
+            <a href="{{ route('history.booking') }}" class="btn btn-secondary ml-2">รีเซ็ต</a>
         </form>
     </div>
     @auth

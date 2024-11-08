@@ -128,6 +128,4 @@ Route::get('/admin-borrow', [lendingController::class, 'searchBorrow'])->name('a
 
 Route::post('/expire-payment', [PaymentController::class, 'expirePayment'])->name('expire.payment');
 
-
-
-
+Route::get('/history-booking', [BookingController::class, 'historyShowBooking'])->name('history.booking');
