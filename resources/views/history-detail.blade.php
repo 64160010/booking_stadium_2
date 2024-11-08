@@ -42,6 +42,7 @@
                 <tr>
                     <th>สนามที่ใช้</th>
                     <th>วันที่ยืม</th>
+                    <th>รหัสอุปกรณ์</th>
                     <th>ชื่ออุปกรณ์</th>
                     <th>เวลา</th>
                     <th>ชั่วโมง</th>
@@ -64,6 +65,7 @@
                         if (!isset($groupedDetails[$key])) {
                             $groupedDetails[$key] = [
                                 'borrow' => $borrow,
+                                'item_code' => $detail->item->item_code,
                                 'item_name' => $detail->item->item_name,
                                 'stadium_name' => $detail->stadium->stadium_name,
                                 'time_slots' => $timeSlots,
@@ -83,6 +85,7 @@
                     <tr id="borrow-row-{{ $group['borrow']->id }}">
                         <td>{{ $group['stadium_name'] }}</td>
                         <td>{{ $group['borrow']->borrow_date }}</td>
+                        <td>{{ $group['item_code'] }}</td>
                         <td>{{ $group['item_name'] }}</td>
                         <td>{{ implode(', ', $group['time_slots']) }}</td>
                         <td>{{ count($group['time_slots']) }} ชั่วโมง</td>

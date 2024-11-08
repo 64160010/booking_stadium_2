@@ -68,4 +68,16 @@ public function timeSlots()
     {
         return $this->belongsTo(BookingStadium::class, 'borrow.booking_stadium_id', 'id');
     }
+
+    public function scopeRepairing($query)
+{
+    return $query->where('status', 'ซ่อม');
+}
+
+// ใน Model BorrowDetail
+public function paymentBooking()
+{
+    return $this->belongsTo(PaymentBooking::class, 'borrow_id', 'borrow_id'); // ระบุความสัมพันธ์กับตาราง payment_booking
+}
+
 }

@@ -68,7 +68,7 @@
     @if($detail->return_status !== 'ยังไม่ตรวจสอบ')
         <tr class="{{ $detail->return_status }}">
                     <td>{{ $detail->borrow->bookingStadium->id ?? 'N/A' }}</td>
-                    <td>{{ $detail->borrow->user->fname ?? 'N/A' }}</td>
+                    <td>{{ $detail->paymentBooking->payer_name ?? 'N/A' }}</td>
                     <td>{{ $detail->item->item_name ?? 'N/A' }}</td>
                     <td>{{ $detail->item->itemType->type_name ?? 'N/A' }}</td>
                     <td>{{ $detail->borrow_quantity ?? 'N/A' }}</td>

@@ -286,19 +286,6 @@ public function confirmBooking($booking_stadium_id)
 }
 
 
-
-
-// public function showLendingModal($bookingId)
-// {
-//     // สมมติว่าคุณมี Booking Model ที่เก็บข้อมูลการจอง
-//     $booking = BookingStadium::with('stadium')->find($bookingId);
-//     $items = Item::all(); // หรือเรียกใช้ข้อมูลอุปกรณ์ตามความเหมาะสม
-//     $group = BookingStadium::find($id);  // ดึงข้อมูลการจองจากฐานข้อมูล
-
-//     return view('bookindDetail', compact('booking', 'items','group'));
-// }
-
-
 public function showHistoryDetail($booking_stadium_id)
 {
     $userId = auth()->id();
@@ -428,6 +415,9 @@ public function historyShowbooking(Request $request)
         $query->where('booking_status', $request->status);
     }
 
+    // Exclude the status "รอการชำระเงิน"
+    $query->where('booking_status', '!=', 'รอการชำระเงิน');
+
     
 
     // Get filtered bookings
@@ -437,7 +427,14 @@ public function historyShowbooking(Request $request)
 }
 
 
+
+
+
+
 }
+
+
+
 
 
 
