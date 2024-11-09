@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Stadium;
 use App\Models\Borrow;
 use App\Models\BorrowDetail;
+use App\Models\Item;
 use App\Models\BookingStadium;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -84,17 +85,63 @@ class HomeController extends Controller
             ->groupBy(DB::raw('DATE(booking_stadium.created_at)'))
             ->get();
     
+        // ข้อมูลจำนวนผู้ใช้ที่มีสถานะ "หมดอายุการชำระเงิน" รายเดือน
+        $expiredPaymentsMonthly = DB::table('booking_stadium')
+            ->join('booking_detail', 'booking_stadium.id', '=', 'booking_detail.booking_stadium_id')
+            ->select(DB::raw('MONTH(booking_stadium.created_at) as month, COUNT(DISTINCT booking_stadium.users_id) as total_users'))
+            ->where('booking_stadium.booking_status', 'หมดอายุการชำระเงิน') // กรองเฉพาะการจองที่หมดอายุการชำระเงิน
+            ->groupBy(DB::raw('MONTH(booking_stadium.created_at)'))
+            ->get();
+    
+        // ข้อมูลจำนวนผู้ใช้ที่มีสถานะ "การชำระเงินถูกปฏิเสธ" รายเดือน
+        $deniedPaymentsMonthly = DB::table('booking_stadium')
+            ->join('booking_detail', 'booking_stadium.id', '=', 'booking_detail.booking_stadium_id')
+            ->select(DB::raw('MONTH(booking_stadium.created_at) as month, COUNT(DISTINCT booking_stadium.users_id) as total_users'))
+            ->where('booking_stadium.booking_status', 'การชำระเงินถูกปฏิเสธ') // กรองเฉพาะการจองที่การชำระเงินถูกปฏิเสธ
+            ->groupBy(DB::raw('MONTH(booking_stadium.created_at)'))
+            ->get();
+
+// ดึงข้อมูลอุปกรณ์ที่อยู่ระหว่างการซ่อมจาก borrow_detail
+$repairDataByDateAndItem = BorrowDetail::selectRaw('DATE(borrow_detail.borrow_date) as date, item.item_name, SUM(borrow_detail.borrow_quantity) as total_repairs')
+    ->join('item', 'borrow_detail.item_id', '=', 'item.id') // เชื่อมตาราง item
+    ->where('borrow_detail.return_status', 'ซ่อม')
+    ->groupBy('date', 'item.item_name') // จัดกลุ่มตามวันที่และชื่ออุปกรณ์
+    ->get()
+    ->groupBy('date')
+    ->map(function ($group) {
+        return $group->pluck('total_repairs', 'item_name');
+    });
+
+// ดึงข้อมูลสำหรับอุปกรณ์ที่ซ่อมไม่ได้รายวัน
+$unrepairableDataByDateAndItem = BorrowDetail::selectRaw('DATE(borrow_detail.borrow_date) as date, item.item_name, SUM(borrow_detail.borrow_quantity) as total_unrepairable')
+    ->join('item', 'borrow_detail.item_id', '=', 'item.id') // เชื่อมตาราง item
+    ->where('borrow_detail.return_status', 'ซ่อมไม่ได้') // เงื่อนไขซ่อมไม่ได้
+    ->groupBy('date', 'item.item_name') // จัดกลุ่มตามวันที่และชื่ออุปกรณ์
+    ->get()
+    ->groupBy('date')
+    ->map(function ($group) {
+        return $group->pluck('total_unrepairable', 'item_name');
+    });
+
+    
         // การแยกข้อมูลเพื่อให้สามารถแสดงในกราฟได้
         $borrowDates = $dailyRevenueBorrow->pluck('date')->toArray();
         $borrowRevenue = $dailyRevenueBorrow->pluck('total_revenue')->toArray();
         $bookingDates = $dailyRevenueBooking->pluck('date')->toArray();
         $bookingRevenue = $dailyRevenueBooking->pluck('total_revenue')->toArray();
     
-        // ตรวจสอบให้วันที่ทั้งสองกราฟตรงกัน (เพื่อลดความซ้ำซ้อน)
-        $allDates = array_unique(array_merge($borrowDates, $bookingDates));
+        // ข้อมูลสำหรับกราฟจำนวนผู้ใช้ที่หมดอายุการชำระเงินรายเดือน
+        $expiredPaymentMonths = $expiredPaymentsMonthly->pluck('month')->toArray();
+        $expiredPaymentUsers = $expiredPaymentsMonthly->pluck('total_users')->toArray();
+    
+        // ข้อมูลสำหรับกราฟจำนวนผู้ใช้ที่ถูกปฏิเสธการชำระเงินรายเดือน
+        $deniedPaymentMonths = $deniedPaymentsMonthly->pluck('month')->toArray();
+        $deniedPaymentUsers = $deniedPaymentsMonthly->pluck('total_users')->toArray();
     
         // ส่งข้อมูลไปยัง View
         return view('adminHome', compact(
+            'repairDataByDateAndItem',
+            'unrepairableDataByDateAndItem',
             'userCount', 
             'stadiumCount', 
             'monthlyBookings', 
@@ -102,11 +149,15 @@ class HomeController extends Controller
             'borrowRevenue', 
             'bookingDates', 
             'bookingRevenue',
-            'dailyRevenueBorrow', // ส่งข้อมูลรายวันจากการยืม
-            'dailyRevenueBooking', // ส่งข้อมูลรายวันจากการจอง
-            'allDates' // ส่งวันที่ทั้งหมดที่ใช้ในกราฟ
+            'dailyRevenueBooking',
+            'dailyRevenueBorrow',
+            'expiredPaymentMonths', // เดือนที่มีการหมดอายุการชำระเงิน
+            'expiredPaymentUsers', // จำนวนผู้ใช้ที่หมดอายุการชำระเงิน
+            'deniedPaymentMonths', // เดือนที่การชำระเงินถูกปฏิเสธ
+            'deniedPaymentUsers' // จำนวนผู้ใช้ที่การชำระเงินถูกปฏิเสธ
         ));
     }
+    
     
     
 
