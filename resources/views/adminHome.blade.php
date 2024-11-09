@@ -78,12 +78,18 @@
                         @endforeach
                     </div>
 
-                    <!-- กราฟการจองสนามรายเดือน -->
-                    <div class="row mt-5">
+                   
+                     <!-- กราฟการจองสนามรายเดือน และ ราคารวมรายวัน -->
+                     <div class="row mt-5">
                         <div class="col-md-6">
                             <h5 class="text-center">จำนวนการจองสนามรายเดือน</h5>
                             <!-- กำหนดขนาดให้กับ canvas -->
                             <canvas id="stadiumBookingChart" width="400" height="300"></canvas> <!-- ปรับขนาดที่นี่ -->
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-center">ราคารวมรายวันของรายการจองและรายการยืม</h5>
+                            <!-- กำหนดขนาดให้กับ canvas -->
+                            <canvas id="dailyRevenueChart" width="400" height="300"></canvas> <!-- ปรับขนาดที่นี่ -->
                         </div>
                     </div>
                 </div>
@@ -96,31 +102,31 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const ctx = document.getElementById('stadiumBookingChart').getContext('2d');
+        const ctx1 = document.getElementById('stadiumBookingChart').getContext('2d');
         const monthlyBookings = @json($monthlyBookings);
 
-        // แปลงข้อมูลให้อยู่ในรูปแบบที่ใช้กับ Chart.js
+        // กราฟการจองสนามรายเดือน
         const stadiumData = {};
-monthlyBookings.forEach(item => {
-    const month = item.month;
-    const stadiumName = item.stadium_name; 
-    const count = item.total_bookings;
+        monthlyBookings.forEach(item => {
+            const month = item.month;
+            const stadiumName = item.stadium_name; 
+            const count = item.total_bookings;
 
-    if (!stadiumData[stadiumName]) {
-        stadiumData[stadiumName] = Array(12).fill(0); // เตรียมข้อมูลเป็น 12 เดือน
-    }
-    stadiumData[stadiumName][month - 1] = count; // อัปเดตจำนวนการจอง
-});
+            if (!stadiumData[stadiumName]) {
+                stadiumData[stadiumName] = Array(12).fill(0); // เตรียมข้อมูลเป็น 12 เดือน
+            }
+            stadiumData[stadiumName][month - 1] = count; // อัปเดตจำนวนการจอง
+        });
 
-const datasets = Object.keys(stadiumData).map((stadiumName, index) => {
-    return {
-        label: stadiumName, // เปลี่ยนชื่อสนามเป็นชื่อในกราฟ
-        data: stadiumData[stadiumName],
-        backgroundColor: `hsl(${index * 60}, 70%, 50%)`, // ใช้สีสำหรับกราฟแท่ง
+        const datasets = Object.keys(stadiumData).map((stadiumName, index) => {
+            return {
+                label: stadiumName, // เปลี่ยนชื่อสนามเป็นชื่อในกราฟ
+                data: stadiumData[stadiumName],
+                backgroundColor: `hsl(${index * 60}, 70%, 50%)`, // ใช้สีสำหรับกราฟแท่ง
             };
         });
 
-        new Chart(ctx, {
+        new Chart(ctx1, {
             type: 'bar', 
             data: {
                 labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
@@ -158,26 +164,65 @@ const datasets = Object.keys(stadiumData).map((stadiumName, index) => {
                 }
             }
         });
+
+        const ctx2 = document.getElementById('dailyRevenueChart').getContext('2d');
+const dailyRevenueBorrow = @json($dailyRevenueBorrow); // ข้อมูลรายวันจากการยืม
+const dailyRevenueBooking = @json($dailyRevenueBooking); // ข้อมูลรายวันจากการจอง
+
+
+        // กราฟแสดงราคารวมรายวัน
+        const borrowDates = dailyRevenueBorrow.map(item => item.date);
+        const borrowRevenue = dailyRevenueBorrow.map(item => item.total_revenue);
+        
+        const bookingDates = dailyRevenueBooking.map(item => item.date);
+        const bookingRevenue = dailyRevenueBooking.map(item => item.total_revenue);
+
+        new Chart(ctx2, {
+            type: 'line', 
+            data: {
+                labels: borrowDates.length > bookingDates.length ? borrowDates : bookingDates, // วันที่ที่มีมากที่สุด
+                datasets: [
+                    {
+                        label: 'รายได้จากการยืม', // เส้นกราฟการยืม
+                        data: borrowDates.map(date => {
+                            const index = borrowDates.indexOf(date);
+                            return borrowRevenue[index] || 0;
+                        }),
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: true,
+                    },
+                    {
+                        label: 'รายได้จากการจอง', // เส้นกราฟการจอง
+                        data: bookingDates.map(date => {
+                            const index = bookingDates.indexOf(date);
+                            return bookingRevenue[index] || 0;
+                        }),
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: true,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'รายได้ (บาท)'
+                        },
+                        beginAtZero: true,
+                    }
+                }
+            }
+        });
     });
 </script>
-
-
-
-<!-- สไตล์ CSS สำหรับการ์ดและเอฟเฟกต์ hover -->
-<style>
-    /* การ์ดที่มีเอฟเฟกต์ hover */
-    .card-hover {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .card-hover:hover {
-        transform: translateY(-10px);
-    }
-    /* ป้องกันไม่ให้การ์ดมีการตกแต่งลิงก์ (underline) */
-    a.text-decoration-none {
-        color: inherit; /* ใช้สีที่กำหนดจากการ์ด */
-    }
-    a.text-decoration-none:hover {
-        text-decoration: none; /* ป้องกันเส้นใต้ */
-    }
-</style>
 @endsection

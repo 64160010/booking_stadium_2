@@ -1,4 +1,5 @@
 @extends('layouts.app')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 @if ($errors->any())
     <div class="alert alert-danger">
@@ -199,36 +200,40 @@
     <!-- JavaScript ส่วนจัดการลบข้อมูลแบบ AJAX -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).ready(function() {
-            // เมื่อคลิกปุ่มลบการจอง
-            $(document).ready(function() {
-                $('.delete-booking-detail').on('click', function(e) {
-                    e.preventDefault();
-                    var bookingDetailId = $(this).data('id');
-                    var row = $('#booking-detail-row-' + bookingDetailId);
+       document.addEventListener('DOMContentLoaded', function() {
+        // Add event listener for delete buttons
+        document.querySelectorAll('.delete-booking-detail').forEach(function(button) {
+            button.addEventListener('click', function() {
+                let bookingDetailId = this.dataset.id;
 
-                    if (confirm('คุณแน่ใจที่จะลบรายการนี้?')) {
-                        $.ajax({
-                            url: '/booking-detail/' + bookingDetailId,
-                            type: 'DELETE',
-                            data: {
-                                _token: '{{ csrf_token() }}'
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    row.remove();
-                                    alert(response.message);
-                                } else {
-                                    alert('เกิดข้อผิดพลาด: ' + response.message);
-                                }
-                            },
-                            error: function(xhr) {
-                                alert('เกิดข้อผิดพลาดในการลบข้อมูล');
-                            }
-                        });
-                    }
-                });
+                if (confirm('คุณต้องการลบรายการนี้หรือไม่?')) {
+                    // AJAX request
+                    fetch(`/booking-details/${bookingDetailId}`, {
+    method: 'DELETE',
+    headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Content-Type': 'application/json',
+    },
+})
+
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remove the deleted row from the table
+                            document.getElementById(`booking-detail-row-${bookingDetailId}`).remove();
+                            alert(data.message);
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('เกิดข้อผิดพลาดในการลบรายการ');
+                    });
+                }
             });
+        });
+    });
 
 
 
@@ -256,7 +261,7 @@
                     });
                 }
             });
-        });
+        
 
         // เมื่อ modal ถูกเปิด
         // เมื่อคลิกปุ่มยืมอุปกรณ์

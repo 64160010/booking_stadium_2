@@ -53,134 +53,145 @@ class BookingController extends Controller
     
     
 
-    public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'date' => 'required|date',
-            'timeSlots' => 'required|array'
-        ]);
-    
-        try {
-            // ตรวจสอบสถานะการจองของผู้ใช้ที่มีอยู่แล้วว่าเป็น 'รอการชำระเงิน' หรือไม่
-            $existingBooking = BookingStadium::where('users_id', auth()->id())
-                ->where('booking_status', 'รอการชำระเงิน')
-                ->first();
-    
-            // ใช้ bookingStadiumId ที่มีอยู่ หรือสร้างใหม่ถ้าไม่มี
-            if ($existingBooking) {
-                $bookingStadiumId = $existingBooking->id;
-            } else {
-                $bookingStadium = BookingStadium::create([
-                    'booking_status' => 'รอการชำระเงิน',
-                    'booking_date' => $validatedData['date'],
-                    'users_id' => auth()->id(),
-                ]);
-                $bookingStadiumId = $bookingStadium->id;
-            }
-    
-            // ตรวจสอบช่องเวลาที่เลือกว่า มีผู้ใช้คนอื่นที่มีสถานะ 'รอการตรวจสอบ' อยู่หรือไม่
-            foreach ($validatedData['timeSlots'] as $stadiumId => $timeSlots) {
-                foreach ($timeSlots as $timeSlot) {
-                    $timeSlotData = \DB::table('time_slot')
-                        ->where('time_slot', $timeSlot)
-                        ->where('stadium_id', $stadiumId)
-                        ->first();
-    
-                    if (!$timeSlotData) {
-                        return response()->json(['success' => false, 'message' => 'เวลาหรือสนามไม่ถูกต้อง.']);
-                    }
-    
-                    // ตรวจสอบการจองซ้ำจากผู้ใช้คนอื่นที่มีสถานะ 'รอการตรวจสอบ' ในตาราง booking_stadium
-                    $existingOtherUserBooking = BookingDetail::where('booking_date', $validatedData['date'])
-                        ->where('stadium_id', $stadiumId)
-                        ->where('time_slot_id', 'LIKE', '%' . $timeSlotData->id . '%')
-                        ->whereHas('bookingStadium', function ($query) {
-                            $query->where('booking_status', 'รอการตรวจสอบ');
-                        })
-                        ->exists();
-    
-                    if ($existingOtherUserBooking) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'มีผู้ใช้ท่านอื่นที่มีสถานะ "รอการตรวจสอบ" ในช่วงเวลานี้แล้ว ไม่สามารถจองซ้ำได้'
-                        ]);
-                    }
-    
-                    // ตรวจสอบการจองซ้ำของผู้ใช้คนเดิมที่มีสถานะ 'รอการชำระเงิน'
-                    $existingUserBooking = BookingDetail::where('booking_date', $validatedData['date'])
-                        ->where('users_id', auth()->id())
-                        ->where('time_slot_id', 'LIKE', '%' . $timeSlotData->id . '%')
-                        ->exists();
-    
-                    if ($existingUserBooking) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'คุณได้ทำรายการนี้ไปแล้ว ไม่สามารถทำซ้ำได้'
-                        ]);
-                    }
-                }
-            }
-    
-            // บันทึกหรืออัปเดตรายละเอียดการจองตามที่ระบุไว้
-            foreach ($validatedData['timeSlots'] as $stadiumId => $timeSlots) {
-                $stadium = Stadium::find($stadiumId);
-                if (!$stadium) {
-                    return response()->json(['success' => false, 'message' => 'สนามไม่ถูกต้อง.']);
-                }
-    
-                $newTimeSlotIds = [];
-                foreach ($timeSlots as $timeSlot) {
-                    $timeSlotData = \DB::table('time_slot')
-                        ->where('time_slot', $timeSlot)
-                        ->where('stadium_id', $stadiumId)
-                        ->first();
-    
-                    if (!$timeSlotData) {
-                        return response()->json(['success' => false, 'message' => 'เวลาหรือสนามไม่ถูกต้อง.']);
-                    }
-    
-                    $newTimeSlotIds[] = $timeSlotData->id;
-                }
-    
-                $timeSlotIdsString = implode(',', $newTimeSlotIds);
-                $totalHours = count($newTimeSlotIds);
-    
-                $existingBookingDetail = BookingDetail::where('stadium_id', $stadiumId)
-                    ->where('booking_date', $validatedData['date'])
-                    ->where('booking_stadium_id', $bookingStadiumId)
-                    ->first();
-    
-                if ($existingBookingDetail) {
-                    $existingTimeSlotIds = explode(',', $existingBookingDetail->time_slot_id);
-                    $newTimeSlotIdsToAdd = array_diff($newTimeSlotIds, $existingTimeSlotIds);
-                    $newTotalHours = count($newTimeSlotIdsToAdd);
-    
-                    $existingBookingDetail->update([
-                        'booking_total_hour' => $existingBookingDetail->booking_total_hour + $newTotalHours,
-                        'booking_total_price' => $stadium->stadium_price * ($existingBookingDetail->booking_total_hour + $newTotalHours),
-                        'time_slot_id' => $existingBookingDetail->time_slot_id . ($newTimeSlotIdsToAdd ? ',' . implode(',', $newTimeSlotIdsToAdd) : ''),
-                    ]);
-                } else {
-                    BookingDetail::create([
-                        'stadium_id' => $stadiumId,
-                        'booking_stadium_id' => $bookingStadiumId,
-                        'booking_total_hour' => $totalHours,
-                        'booking_total_price' => $stadium->stadium_price * $totalHours,
-                        'booking_date' => $validatedData['date'],
-                        'users_id' => auth()->id(),
-                        'time_slot_id' => $timeSlotIdsString,
-                    ]);
-                }
-            }
-    
-            return response()->json([
-                'success' => true,
-                'booking_stadium_id' => $bookingStadiumId
+public function store(Request $request)
+{
+    $validatedData = $request->validate([
+        'date' => 'required|date',
+        'timeSlots' => 'required|array'
+    ]);
+
+    try {
+        // ตรวจสอบสถานะการจองของผู้ใช้ที่มีอยู่แล้วว่าเป็น 'รอการชำระเงิน' หรือไม่
+        $existingBooking = BookingStadium::where('users_id', auth()->id())
+            ->where('booking_status', 'รอการชำระเงิน')
+            ->first();
+
+        // ใช้ bookingStadiumId ที่มีอยู่ หรือสร้างใหม่ถ้าไม่มี
+        if ($existingBooking) {
+            $bookingStadiumId = $existingBooking->id;
+        } else {
+            $bookingStadium = BookingStadium::create([
+                'booking_status' => 'รอการชำระเงิน',
+                'booking_date' => $validatedData['date'],
+                'users_id' => auth()->id(),
             ]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()]);
+            $bookingStadiumId = $bookingStadium->id;
+        }
+
+// คำเตือนถ้ามีการจองซ้ำ
+$conflictingTimeSlots = [];  // เพื่อเก็บช่วงเวลาที่มีการจองซ้ำ
+
+// ตรวจสอบช่องเวลาที่เลือกว่า มีผู้ใช้คนอื่นที่มีสถานะ 'รอการตรวจสอบ' อยู่หรือไม่
+foreach ($validatedData['timeSlots'] as $stadiumId => $timeSlots) {
+    foreach ($timeSlots as $timeSlot) {
+        $timeSlotData = \DB::table('time_slot')
+            ->where('time_slot', $timeSlot)
+            ->where('stadium_id', $stadiumId)
+            ->first();
+
+        if (!$timeSlotData) {
+            return response()->json(['success' => false, 'message' => 'เวลาหรือสนามไม่ถูกต้อง.']);
+        }
+
+        // ตรวจสอบการจองซ้ำจากผู้ใช้คนอื่นที่มีสถานะ 'รอการตรวจสอบ' ในตาราง booking_stadium
+        $existingOtherUserBooking = BookingDetail::where('booking_date', $validatedData['date'])
+            ->where('stadium_id', $stadiumId)
+            ->where('time_slot_id', 'LIKE', '%' . $timeSlotData->id . '%')
+            ->whereHas('bookingStadium', function ($query) {
+                $query->where('booking_status', 'รอการตรวจสอบ');
+            })
+            ->exists();
+
+        if ($existingOtherUserBooking) {
+            $conflictingTimeSlots[] = $timeSlot;  // เก็บช่วงเวลาที่มีการจองซ้ำ
+        }
+
+        // ตรวจสอบการจองซ้ำของผู้ใช้คนเดิมที่มีสถานะ 'รอการชำระเงิน'
+        $existingUserBooking = BookingDetail::where('booking_date', $validatedData['date'])
+            ->where('users_id', auth()->id())
+            ->where('time_slot_id', 'LIKE', '%' . $timeSlotData->id . '%')
+            ->exists();
+
+        if ($existingUserBooking) {
+            return response()->json([
+                'success' => false,
+                'message' => 'คุณได้ทำรายการนี้ไปแล้ว ไม่สามารถทำซ้ำได้'
+            ]);
         }
     }
+}
+
+// ถ้ามีช่วงเวลาที่มีการจองซ้ำ แสดงข้อมูลเหล่านั้นในข้อความ
+if (!empty($conflictingTimeSlots)) {
+    $conflictingTimeSlotsText = implode(', ', $conflictingTimeSlots);
+    return response()->json([
+        'success' => false,
+        'message' => 'มีผู้ใช้ท่านอื่นที่มีสถานะ "รอการตรวจสอบ" ในช่วงเวลา ' . $conflictingTimeSlotsText . ' ดังนั้นไม่สามารถจองซ้ำได้',
+        'conflictingTimeSlots' => $conflictingTimeSlots // ส่งข้อมูลที่เกี่ยวข้องกับช่วงเวลาที่มีการจองซ้ำ
+    ]);
+}
+
+// บันทึกหรืออัปเดตรายละเอียดการจองตามที่ระบุไว้
+foreach ($validatedData['timeSlots'] as $stadiumId => $timeSlots) {
+    $stadium = Stadium::find($stadiumId);
+    if (!$stadium) {
+        return response()->json(['success' => false, 'message' => 'สนามไม่ถูกต้อง.']);
+    }
+
+    $newTimeSlotIds = [];
+    foreach ($timeSlots as $timeSlot) {
+        $timeSlotData = \DB::table('time_slot')
+            ->where('time_slot', $timeSlot)
+            ->where('stadium_id', $stadiumId)
+            ->first();
+
+        if (!$timeSlotData) {
+            return response()->json(['success' => false, 'message' => 'เวลาหรือสนามไม่ถูกต้อง.']);
+        }
+
+        $newTimeSlotIds[] = $timeSlotData->id;
+    }
+
+    $timeSlotIdsString = implode(',', $newTimeSlotIds);
+    $totalHours = count($newTimeSlotIds);
+
+    $existingBookingDetail = BookingDetail::where('stadium_id', $stadiumId)
+        ->where('booking_date', $validatedData['date'])
+        ->where('booking_stadium_id', $bookingStadiumId)
+        ->first();
+
+    if ($existingBookingDetail) {
+        $existingTimeSlotIds = explode(',', $existingBookingDetail->time_slot_id);
+        $newTimeSlotIdsToAdd = array_diff($newTimeSlotIds, $existingTimeSlotIds);
+        $newTotalHours = count($newTimeSlotIdsToAdd);
+
+        $existingBookingDetail->update([
+            'booking_total_hour' => $existingBookingDetail->booking_total_hour + $newTotalHours,
+            'booking_total_price' => $stadium->stadium_price * ($existingBookingDetail->booking_total_hour + $newTotalHours),
+            'time_slot_id' => $existingBookingDetail->time_slot_id . ($newTimeSlotIdsToAdd ? ',' . implode(',', $newTimeSlotIdsToAdd) : ''),
+        ]);
+    } else {
+        BookingDetail::create([
+            'stadium_id' => $stadiumId,
+            'booking_stadium_id' => $bookingStadiumId,
+            'booking_total_hour' => $totalHours,
+            'booking_total_price' => $stadium->stadium_price * $totalHours,
+            'booking_date' => $validatedData['date'],
+            'users_id' => auth()->id(),
+            'time_slot_id' => $timeSlotIdsString,
+        ]);
+    }
+}
+
+return response()->json([
+    'success' => true,
+    'booking_stadium_id' => $bookingStadiumId
+]);
+} catch (\Exception $e) {
+return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()]);
+}
+}
+    
     
     
         
@@ -246,16 +257,21 @@ class BookingController extends Controller
     
 
 
-public function destroy($id)
-{
-    $booking = BookingStadium::find($id);
-    if ($booking) {
-        $booking->delete();
-        return response()->json(['success' => true, 'message' => 'ลบการจองสำเร็จ']);
-    }
+    // use Illuminate\Support\Facades\Log;
 
-    return response()->json(['success' => false, 'message' => 'ไม่พบการจอง']);
-}
+    public function destroy($id)
+    {
+        Log::info('Deleting booking with ID: ' . $id);
+    
+        $booking = BookingStadium::find($id);
+        if ($booking) {
+            $booking->delete();
+            return response()->json(['success' => true, 'message' => 'ลบการจองสำเร็จ']);
+        }
+    
+        return response()->json(['success' => false, 'message' => 'ไม่พบการจอง']);
+    }
+    
 
 
 public function confirmBooking($booking_stadium_id)
@@ -378,17 +394,22 @@ public function reject(Request $request, $id)
 
 public function showBookingForm(Request $request)
 {
-    // ดึงข้อมูลสนามทั้งหมด
-    $stadiums = Stadium::all();
+    // กำหนดวันที่จาก URL หรือใช้วันที่ปัจจุบัน
+    $date = $request->get('date', \Carbon\Carbon::now()->format('Y-m-d'));
 
-    // ดึงข้อมูลการจองที่มีสถานะ "รอการตรวจสอบ" จาก booking_stadium
-    $pendingBookings = BookingStadium::where('booking_status', 'รอการตรวจสอบ')
-                                     ->where('booking_date', $request->input('booking_date'))
-                                     ->get();
+    // ดึงข้อมูลสนามที่มีเวลาและรายละเอียด
+    $stadiums = Stadium::with('timeSlots')->get();
 
-    // ส่งข้อมูลไปที่ view
-    return view('booking', compact('stadiums', 'pendingBookings'));
+    // ดึงข้อมูลการจองที่มีการจองในวันที่กำหนด
+    $bookingDetails = BookingDetail::where('booking_date', $request->get('date'))
+    ->with('bookingStadium') // ดึงข้อมูลที่เกี่ยวข้องกับสถานะการจอง
+    ->get();
+
+    // ส่งข้อมูลไปยัง View
+    return view('booking', compact('stadiums', 'date', 'bookingDetails'));  // ส่งค่า bookingDetails ไปด้วย
 }
+
+
 
 public function historyShowbooking(Request $request)
 {
