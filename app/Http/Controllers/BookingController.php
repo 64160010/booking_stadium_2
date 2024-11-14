@@ -47,12 +47,6 @@ class BookingController extends Controller
 }
 
 
-    
-    
-    
-    
-    
-
 public function store(Request $request)
 {
     $validatedData = $request->validate([
@@ -191,13 +185,6 @@ return response()->json([
 return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()]);
 }
 }
-    
-    
-    
-        
-    
-        
-        
     
     
         public function show()

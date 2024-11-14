@@ -35,48 +35,52 @@
                                 <button class="btn btn-md btn-secondary">มีการจองแล้ว</button>
                             </div>
 
-                            
+
                             @foreach ($stadiums as $stadium)
-    <div class="mb-4">
-        <div class="card border-light">
-            <div class="card-body border stadium-card">
-                <h5 class="card-title">{{ $stadium->stadium_name }}</h5>
-                <p class="card-text">ราคา: {{ number_format($stadium->stadium_price) }} บาท</p>
-                <p class="card-text">สถานะ:
-                    <span class="badge @if ($stadium->stadium_status == 'พร้อมให้บริการ') bg-success @else bg-danger @endif">
-                        {{ $stadium->stadium_status }}
-                    </span>
-                </p>
+                                <div class="mb-4">
+                                    <div class="card border-light">
+                                        <div class="card-body border stadium-card">
+                                            <h5 class="card-title">{{ $stadium->stadium_name }}</h5>
+                                            <p class="card-text">ราคา: {{ number_format($stadium->stadium_price) }} บาท</p>
+                                            <p class="card-text">สถานะ:
+                                                <span
+                                                    class="badge @if ($stadium->stadium_status == 'พร้อมให้บริการ') bg-success @else bg-danger @endif">
+                                                    {{ $stadium->stadium_status }}
+                                                </span>
+                                            </p>
 
-                 <!-- การเลือกช่วงเวลา -->
-                 <div class="d-flex flex-wrap">
-                    @foreach ($stadium->timeSlots as $timeSlot)
-                        @php
-                            $statusClass = 'btn-outline-primary'; 
-                            $statusText = 'ว่าง';
+                                            <!-- การเลือกช่วงเวลา -->
+                                            <div class="d-flex flex-wrap">
+                                                @foreach ($stadium->timeSlots as $timeSlot)
+                                                @php
+                                                    $statusClass = 'btn-outline-primary'; 
+                                                    $statusText = 'ว่าง';
+                                            
+                                                    // ตรวจสอบสถานะการจอง
+                                                    if ($timeSlot->conflictingBooking) {
+                                                        $statusClass = 'btn-secondary disabled'; // สีเทา และปิดการใช้งาน
+                                                        $statusText = 'จองซ้ำ';
+                                                    } elseif ($timeSlot->booking_status == 'รอการตรวจสอบ') {
+                                                        $statusClass = 'btn-warning text-dark'; // สีเหลืองสำหรับ 'รอการตรวจสอบ'
+                                                        $statusText = 'รอการตรวจสอบ';
+                                                    }
+                                                @endphp
+                                            
+                                                <button class="btn m-1 time-slot-button {{ $statusClass }}"
+                                                    data-stadium="{{ $stadium->id }}"
+                                                    data-time="{{ $timeSlot->time_slot }}"
+                                                    onclick="selectTimeSlot(this, {{ $stadium->id }})"
+                                                    {{ $statusClass === 'btn-secondary disabled' ? 'disabled' : '' }}>
+                                                    {{ $timeSlot->time_slot }} - {{ $statusText }}
+                                                </button>
+                                            @endforeach
+                                            
 
-                            // เช็คสถานะการจองซ้ำจากผู้ใช้คนอื่น
-                            $conflictingBooking = $conflictingTimeSlots[$stadium->id][$timeSlot->id] ?? false;
-                            if ($conflictingBooking) {
-                                $statusClass = 'btn-secondary disabled'; // สีเทา
-                                $statusText = 'จองซ้ำ';
-                            }
-                        @endphp
-
-<button class="btn m-1 time-slot-button {{ $statusClass }}"
-data-stadium="{{ $stadium->id }}"
-data-time="{{ $timeSlot->time_slot }}"
-onclick="selectTimeSlot(this, {{ $stadium->id }})"
-{{ $statusClass === 'btn-secondary disabled' ? 'disabled' : '' }}>
-{{ $timeSlot->time_slot }} - {{ $statusText }}
-</button>
-
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </div>
-@endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
 
 
                             <!-- ปุ่มจองตามสถานะการล็อกอิน -->
@@ -103,133 +107,133 @@ onclick="selectTimeSlot(this, {{ $stadium->id }})"
     </main>
 
     @push('scripts')
-    <script>
-        let selectedTimeSlots = {}; // วัตถุเก็บช่วงเวลาที่เลือกสำหรับแต่ละสนาม
-        let isDateConfirmed = false; // ตัวแปรเช็คว่าได้ยืนยันวันที่หรือยัง
-    
-        // ฟังก์ชันสำหรับจัดการการเลือกช่วงเวลา
-        function selectTimeSlot(button, stadiumId) {
-            const time = button.getAttribute('data-time'); // รับค่าช่วงเวลาที่เลือก
-            // ตรวจสอบว่าเป็นปุ่มที่ถูกปิดอยู่หรือไม่
-            if (button.classList.contains('disabled')) {
-                alert('สนามนี้อยู่ในสถานะปิดปรับปรุง ไม่สามารถเลือกช่วงเวลาได้'); // แสดงข้อความเมื่อกดปุ่มที่ถูกปิด
-                return;
-            }
-    
-            // กำหนดค่าเริ่มต้นสำหรับสนามถ้ายังไม่มี
-            if (!selectedTimeSlots[stadiumId]) {
-                selectedTimeSlots[stadiumId] = [];
-            }
-    
-            // ตรวจสอบว่าช่วงเวลาถูกเลือกไว้แล้วหรือไม่
-            const timeIndex = selectedTimeSlots[stadiumId].indexOf(time);
-            if (timeIndex > -1) {
-                // ถ้าเลือกอยู่ ให้ลบออก
-                selectedTimeSlots[stadiumId].splice(timeIndex, 1);
-                button.classList.remove('active'); // ลบคลาส active
-            } else {
-                // ถ้ายังไม่เลือก ให้เพิ่มเข้าไป
-                selectedTimeSlots[stadiumId].push(time);
-                button.classList.add('active'); // เพิ่มคลาส active
-            }
-        }
-    
-        // ฟังก์ชันยืนยันการเลือกวันที่
-        function confirmDateSelection() {
-            const selectedDate = document.getElementById('booking-date').value;
-            if (!selectedDate) {
-                alert('กรุณาเลือกวันที่ก่อน');
-                return;
-            }
-    
-            isDateConfirmed = true; // ตั้งค่าว่าผู้ใช้ยืนยันวันที่แล้ว
-            alert('คุณเลือกวันที่: ' + selectedDate);
-    
-            // ทำให้สามารถเลือกช่วงเวลาได้หลังจากยืนยันวันที่
-            const timeSlotButtons = document.querySelectorAll('.time-slot-button');
-            timeSlotButtons.forEach(button => {
-                button.disabled = false; // เปิดการใช้งานปุ่มเลือกช่วงเวลา
-            });
-    
-            // เปิดปุ่มจองสนามเมื่อยืนยันวันที่
-            document.getElementById('booking-btn').disabled = false;
-    
-            // อัปเดต URL ด้วยวันที่ที่เลือก
-            window.history.pushState(null, null, `?date=${selectedDate}`);
-        }
-    
-        // ฟังก์ชันสำหรับส่งการจอง
-        function submitBooking() {
-            const date = document.getElementById('booking-date').value;
-            const selectedStadiums = Object.keys(selectedTimeSlots); // รับสนามที่เลือก
-    
-            // ตรวจสอบข้อมูลที่ป้อน
-            if (!date) {
-                alert('กรุณาเลือกวันที่');
-                return;
-            }
-    
-            if (selectedStadiums.length === 0) {
-                alert('กรุณาเลือกสนาม');
-                return;
-            }
-    
-            const bookingData = {
-                date: date,
-                timeSlots: selectedTimeSlots, // ส่งช่วงเวลาที่เลือก
-                _token: '{{ csrf_token() }}' // CSRF token สำหรับความปลอดภัย
-            };
-    
-            // ส่งข้อมูลการจองไปยังเซิร์ฟเวอร์
-            fetch('{{ route('booking.store') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest' // แสดงว่าคำร้องนี้เป็น AJAX request
-                    },
-                    body: JSON.stringify(bookingData) // แปลงข้อมูลการจองเป็น JSON
-                })
-                .then(response => response.json())
-                .then(data => {
-    if (data.login_required) {
-        window.location.href = '{{ route('login') }}';
-    } else if (data.success) {
-        // เปลี่ยนเส้นทางไปหน้ารายละเอียดการจอง
-        const bookingStadiumId = data.booking_stadium_id;
-        window.location.href = `{{ url('/bookingDetail') }}/${bookingStadiumId}`;
+        <script>
+            let selectedTimeSlots = {}; // วัตถุเก็บช่วงเวลาที่เลือกสำหรับแต่ละสนาม
+            let isDateConfirmed = false; // ตัวแปรเช็คว่าได้ยืนยันวันที่หรือยัง
 
-        // ตรวจสอบการจองซ้ำ
-        if (data.conflictingTimeSlots && Object.keys(data.conflictingTimeSlots).length > 0) {
-            // ถ้ามีการจองซ้ำ
-            data.conflictingTimeSlots.forEach(timeSlot => {
-                const button = document.querySelector(`button[data-time="${timeSlot}"]`);
-                if (button) {
-                    button.classList.add('btn-secondary', 'disabled'); // เพิ่มคลาสสีเทาและ disabled
-                    button.textContent = `${timeSlot} - จองซ้ำ`;
+            // ฟังก์ชันสำหรับจัดการการเลือกช่วงเวลา
+            function selectTimeSlot(button, stadiumId) {
+                const time = button.getAttribute('data-time'); // รับค่าช่วงเวลาที่เลือก
+                // ตรวจสอบว่าเป็นปุ่มที่ถูกปิดอยู่หรือไม่
+                if (button.classList.contains('disabled')) {
+                    alert('สนามนี้อยู่ในสถานะปิดปรับปรุง ไม่สามารถเลือกช่วงเวลาได้'); // แสดงข้อความเมื่อกดปุ่มที่ถูกปิด
+                    return;
                 }
-            });
-        }
-    } else {
-        document.getElementById('booking-result').innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
-    }
-})
 
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('booking-result').innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาดในการส่งคำขอการจอง</div>';
-                });
-        }
-    
-        // ตรวจสอบวันที่จาก URL ทุกครั้งที่โหลดหน้า
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const dateFromUrl = urlParams.get('date');
-            if (dateFromUrl) {
-                document.getElementById('booking-date').value = dateFromUrl; // กำหนดค่า date ตาม URL
-                isDateConfirmed = true; // ผู้ใช้ได้ยืนยันวันที่จาก URL
+                // กำหนดค่าเริ่มต้นสำหรับสนามถ้ายังไม่มี
+                if (!selectedTimeSlots[stadiumId]) {
+                    selectedTimeSlots[stadiumId] = [];
+                }
+
+                // ตรวจสอบว่าช่วงเวลาถูกเลือกไว้แล้วหรือไม่
+                const timeIndex = selectedTimeSlots[stadiumId].indexOf(time);
+                if (timeIndex > -1) {
+                    // ถ้าเลือกอยู่ ให้ลบออก
+                    selectedTimeSlots[stadiumId].splice(timeIndex, 1);
+                    button.classList.remove('active'); // ลบคลาส active
+                } else {
+                    // ถ้ายังไม่เลือก ให้เพิ่มเข้าไป
+                    selectedTimeSlots[stadiumId].push(time);
+                    button.classList.add('active'); // เพิ่มคลาส active
+                }
             }
-        };
-    </script>
-    
+
+            // ฟังก์ชันยืนยันการเลือกวันที่
+            function confirmDateSelection() {
+                const selectedDate = document.getElementById('booking-date').value;
+                if (!selectedDate) {
+                    alert('กรุณาเลือกวันที่ก่อน');
+                    return;
+                }
+
+                isDateConfirmed = true; // ตั้งค่าว่าผู้ใช้ยืนยันวันที่แล้ว
+                alert('คุณเลือกวันที่: ' + selectedDate);
+
+                // ทำให้สามารถเลือกช่วงเวลาได้หลังจากยืนยันวันที่
+                const timeSlotButtons = document.querySelectorAll('.time-slot-button');
+                timeSlotButtons.forEach(button => {
+                    if (!button.classList.contains('disabled')) {
+                        button.disabled = false; // เปิดการใช้งานปุ่มเลือกช่วงเวลา
+                    }
+                });
+
+                // เปิดปุ่มจองสนามเมื่อยืนยันวันที่
+                document.getElementById('booking-btn').disabled = false;
+
+                // อัปเดต URL ด้วยวันที่ที่เลือก
+                window.history.pushState(null, null, `?date=${selectedDate}`);
+            }
+
+
+            // ฟังก์ชันสำหรับส่งการจอง
+            function submitBooking() {
+                const date = document.getElementById('booking-date').value;
+                const selectedStadiums = Object.keys(selectedTimeSlots); // รับสนามที่เลือก
+
+                // ตรวจสอบข้อมูลที่ป้อน
+                if (!date) {
+                    alert('กรุณาเลือกวันที่');
+                    return;
+                }
+
+                if (selectedStadiums.length === 0) {
+                    alert('กรุณาเลือกสนาม');
+                    return;
+                }
+
+                const bookingData = {
+                    date: date,
+                    timeSlots: selectedTimeSlots, // ส่งช่วงเวลาที่เลือก
+                    _token: '{{ csrf_token() }}' // CSRF token สำหรับความปลอดภัย
+                };
+
+                // ส่งข้อมูลการจองไปยังเซิร์ฟเวอร์
+                fetch('{{ route('booking.store') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest' // แสดงว่าคำร้องนี้เป็น AJAX request
+                        },
+                        body: JSON.stringify(bookingData) // แปลงข้อมูลการจองเป็น JSON
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.login_required) {
+                            window.location.href = '{{ route('login') }}';
+                        } else if (data.success) {
+                            const bookingStadiumId = data.booking_stadium_id;
+                            window.location.href = `{{ url('/bookingDetail') }}/${bookingStadiumId}`;
+                        } else if (data.conflictingTimeSlots) {
+                            data.conflictingTimeSlots.forEach(timeSlot => {
+                                const button = document.querySelector(`button[data-time="${timeSlot}"]`);
+                                if (button) {
+                                    button.classList.add('btn-secondary', 'disabled');
+                                    button.textContent = `${timeSlot} - จองซ้ำ`;
+                                }
+                            });
+                        } else {
+                            document.getElementById('booking-result').innerHTML = '<div class="alert alert-danger">' + data
+                                .message + '</div>';
+                        }
+                    })
+
+
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.getElementById('booking-result').innerHTML =
+                            '<div class="alert alert-danger">เกิดข้อผิดพลาดในการส่งคำขอการจอง</div>';
+                    });
+            }
+
+            // ตรวจสอบวันที่จาก URL ทุกครั้งที่โหลดหน้า
+            window.onload = function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const dateFromUrl = urlParams.get('date');
+                if (dateFromUrl) {
+                    document.getElementById('booking-date').value = dateFromUrl; // กำหนดค่า date ตาม URL
+                    isDateConfirmed = true; // ผู้ใช้ได้ยืนยันวันที่จาก URL
+                }
+            };
+        </script>
     @endpush
-    @endsection
+@endsection
